@@ -150,7 +150,7 @@ const Sidebar = ({ activeTab, onChangeTab }: SidebarProps) => {
         <Button
           shape='block'
           color='error'
-          className='uppercase tracking-wide'
+          className='whitespace-nowrap overflow-hidden uppercase tracking-wide'
           icon={<IconClose />}
           title={t('dataEditor.sidebar.backToMenu')}
           onClick={() => navigate('/')}

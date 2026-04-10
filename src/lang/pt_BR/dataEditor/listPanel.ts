@@ -1,5 +1,5 @@
 export const listPanelPtBR = {
-  search: 'Pesquisar...',
+  searchPlaceholder: 'Pesquisar...',
   entries: '{count} registros',
   noSelectionTitle: 'Selecione uma categoria',
   noSelectionSubtitle: 'para visualizar os dados',
