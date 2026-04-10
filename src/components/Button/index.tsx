@@ -3,23 +3,7 @@ import { forwardRef } from 'react'
 
 import { cn } from '@/utils/styles'
 
-export type ButtonColor =
-  | 'neutral'
-  | 'primary'
-  | 'secondary'
-  | 'accent'
-  | 'info'
-  | 'success'
-  | 'warning'
-  | 'error'
-
-export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-
-export type ButtonVariant = 'solid' | 'outline' | 'dash' | 'soft' | 'ghost' | 'link'
-
-export type ButtonShape = 'wide' | 'block' | 'square' | 'circle'
-
-type Breakpoint = 'sm' | 'md' | 'lg' | 'xl'
+import type { ButtonBreakpoint, ButtonColor, ButtonShape, ButtonSize, ButtonVariant } from './types'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Cor semântica do botão (DaisyUI color modifier) */
@@ -30,7 +14,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    * Tamanhos responsivos por breakpoint.
    * Ex: { sm: 'sm', lg: 'lg' } → aplica `sm:btn-sm lg:btn-lg`
    */
-  responsiveSize?: Partial<Record<Breakpoint, ButtonSize>>
+  responsiveSize?: Partial<Record<ButtonBreakpoint, ButtonSize>>
   /** Estilo/variante visual do botão */
   variant?: ButtonVariant
   /** Forma do botão */
@@ -68,7 +52,7 @@ const SIZE_MAP: Record<ButtonSize, string> = {
 
 // Todas as combinações de breakpoint × tamanho listadas explicitamente
 // para que o scanner do Tailwind v4 as detecte corretamente
-const RESPONSIVE_SIZE_MAP: Record<Breakpoint, Record<ButtonSize, string>> = {
+const RESPONSIVE_SIZE_MAP: Record<ButtonBreakpoint, Record<ButtonSize, string>> = {
   sm: { xs: 'sm:btn-xs', sm: 'sm:btn-sm', md: 'sm:btn-md', lg: 'sm:btn-lg', xl: 'sm:btn-xl' },
   md: { xs: 'md:btn-xs', sm: 'md:btn-sm', md: 'md:btn-md', lg: 'md:btn-lg', xl: 'md:btn-xl' },
   lg: { xs: 'lg:btn-xs', sm: 'lg:btn-sm', md: 'lg:btn-md', lg: 'lg:btn-lg', xl: 'lg:btn-xl' },
@@ -110,7 +94,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const responsiveClasses = responsiveSize
-      ? (Object.entries(responsiveSize) as [Breakpoint, ButtonSize][])
+      ? (Object.entries(responsiveSize) as [ButtonBreakpoint, ButtonSize][])
           .map(([bp, s]) => RESPONSIVE_SIZE_MAP[bp][s])
           .join(' ')
       : ''
