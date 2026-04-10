@@ -12,7 +12,10 @@ import '@fontsource/poppins/800.css'
 import '@fontsource/poppins/900.css'
 import circleFlags from '@iconify/json/json/circle-flags.json'
 import { addCollection } from '@iconify/react'
+import { RouterProvider } from 'react-router'
 
+import IntlProvider from './providers/IntlProvider'
+import router from './routes'
 import './styles/main.css'
 
 const root = document.getElementById('root') as HTMLElement
@@ -21,6 +24,8 @@ addCollection(circleFlags)
 
 createRoot(root).render(
   <StrictMode>
-    <span>fala zeze bom dia cara</span>
+    <IntlProvider>
+      <RouterProvider router={router} />
+    </IntlProvider>
   </StrictMode>
 )
