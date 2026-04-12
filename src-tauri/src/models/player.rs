@@ -30,28 +30,28 @@ impl Player {
     /// igual à lógica do C# (Overall não estava no JSON, era calculado).
     pub fn overall(&self) -> u8 {
         match self.position {
-            Position::GK => {
+            Position::GOL => {
                 let v = self.defense as f32 * 0.5
                     + self.stamina as f32 * 0.2
                     + self.passing as f32 * 0.2
                     + self.speed as f32 * 0.1;
                 v.round() as u8
             }
-            Position::CB | Position::LB | Position::RB => {
+            Position::ZAG | Position::LAT_E | Position::LAT_D => {
                 let v = self.defense as f32 * 0.4
                     + self.speed as f32 * 0.2
                     + self.passing as f32 * 0.2
                     + self.stamina as f32 * 0.2;
                 v.round() as u8
             }
-            Position::CM | Position::CAM | Position::CDM | Position::DM | Position::LM | Position::RM => {
+            Position::VOL | Position::MEI | Position::MEI_A => {
                 let v = self.passing as f32 * 0.35
                     + self.dribbling as f32 * 0.25
                     + self.defense as f32 * 0.2
                     + self.stamina as f32 * 0.2;
                 v.round() as u8
             }
-            Position::LW | Position::RW | Position::ST | Position::CF => {
+            Position::PNT_E | Position::PNT_D | Position::SA | Position::ATA => {
                 let v = self.shooting as f32 * 0.35
                     + self.speed as f32 * 0.25
                     + self.dribbling as f32 * 0.25
@@ -64,31 +64,46 @@ impl Player {
 
 /// Posições espelhadas do C# (campo Position: string → enum tipado).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "UPPERCASE")]
+#[allow(non_camel_case_types)]
 pub enum Position {
-    GK,
-    CB, LB, RB,
-    CDM, DM,
-    CM, LM, RM,
-    CAM,
-    LW, RW,
-    CF, ST,
+    #[serde(rename = "GOL", alias = "GK")]
+    GOL,
+    #[serde(rename = "ZAG", alias = "CB")]
+    ZAG,
+    #[serde(rename = "LAT-E", alias = "LB")]
+    LAT_E,
+    #[serde(rename = "LAT-D", alias = "RB")]
+    LAT_D,
+    #[serde(rename = "VOL", alias = "CDM", alias = "DM")]
+    VOL,
+    #[serde(rename = "MEI", alias = "CM")]
+    MEI,
+    #[serde(rename = "MEI-A", alias = "CAM")]
+    MEI_A,
+    #[serde(rename = "PNT-E", alias = "LW", alias = "LM")]
+    PNT_E,
+    #[serde(rename = "PNT-D", alias = "RW", alias = "RM")]
+    PNT_D,
+    #[serde(rename = "SA", alias = "CF")]
+    SA,
+    #[serde(rename = "ATA", alias = "ST")]
+    ATA,
 }
 
 impl Position {
     pub fn display_rank(&self) -> u8 {
         match self {
-            Position::GK => 0,
-            Position::CB => 1,
-            Position::LB => 2,
-            Position::RB => 3,
-            Position::CDM | Position::DM => 4,
-            Position::CM | Position::LM | Position::RM => 5,
-            Position::CAM => 6,
-            Position::LW => 7,
-            Position::RW => 8,
-            Position::CF => 9,
-            Position::ST => 10,
+            Position::GOL => 0,
+            Position::ZAG => 1,
+            Position::LAT_E => 2,
+            Position::LAT_D => 3,
+            Position::VOL => 4,
+            Position::MEI => 5,
+            Position::MEI_A => 6,
+            Position::PNT_E => 7,
+            Position::PNT_D => 8,
+            Position::SA => 9,
+            Position::ATA => 10,
         }
     }
 }

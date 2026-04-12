@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router'
 
+import Career from '@/pages/Career'
 import DataEditor from '@/pages/DataEditor'
 import LoadGame from '@/pages/LoadGame'
 import MainMenu from '@/pages/MainMenu'
@@ -17,6 +18,10 @@ const rootRoutes: RouteObject[] = [
   {
     path: '/load-game',
     element: <LoadGame />,
+  },
+  {
+    path: '/career',
+    element: <Career />,
   },
   {
     path: '/data-editor',
