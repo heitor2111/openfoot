@@ -24,7 +24,7 @@ const MainMenu = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.75, delay: 0.25 }}
+        transition={{ duration: 0.5, delay: 0.25 }}
         className='mb-8 text-center'
       >
         <h1 className='text-4xl font-bold tracking-wide m-0'>Openfoot</h1>
@@ -39,7 +39,7 @@ const MainMenu = () => {
             className='cursor-pointer bg-green-900 border border-primary/50 py-4 px-6 text-lg font-medium uppercase tracking-wide'
             initial={{ opacity: 0, x: -200, skewX: -24 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.75, delay: 0.1 + index * 0.1 }}
+            transition={{ duration: 0.5, delay: 0.1 + index * 0.1 }}
           >
             <div style={{ transform: 'skewX(24deg)' }}>{t(item.labelId)}</div>
           </motion.div>
