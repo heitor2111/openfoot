@@ -1,68 +1,18 @@
 import { useMemo } from 'react'
 
-import { converter } from 'culori'
+import {
+  averageHue,
+  clamp,
+  content,
+  hexToOKLCH,
+  hueDistance,
+  isAchromatic,
+  normalizeHue,
+  toStr,
+} from './functions'
+import type { OKLCH, UseThemeProps } from './types'
 
-type OKLCH = { l: number; c: number; h: number }
-
-type Input = {
-  primary: string // HEX
-  secondary: string // HEX
-  tertiary?: string | null // HEX opcional
-}
-
-const toOklch = converter('oklch')
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v))
-}
-
-function normalizeHue(h: number) {
-  return (h + 360) % 360
-}
-
-function hueDistance(a: number, b: number) {
-  const d = Math.abs(a - b) % 360
-  return d > 180 ? 360 - d : d
-}
-
-function averageHue(a: number, b: number) {
-  const diff = ((b - a + 540) % 360) - 180
-  return normalizeHue(a + diff / 2)
-}
-
-function content(bg: OKLCH): OKLCH {
-  return bg.l > 60 ? { l: 15, c: 0.02, h: bg.h } : { l: 95, c: 0, h: 0 }
-}
-
-function toStr({ l, c, h }: OKLCH) {
-  return `oklch(${l}% ${c} ${h})`
-}
-
-/** Limiar abaixo do qual a cor é considerada acromática */
-const ACHROMATIC_THRESHOLD = 0.04
-
-function isAchromatic(oklch: OKLCH): boolean {
-  return oklch.c < ACHROMATIC_THRESHOLD
-}
-
-function hexToOKLCH(hex: string): OKLCH {
-  try {
-    const c = toOklch(hex)
-
-    if (!c) throw new Error()
-
-    return {
-      l: c.l * 100,
-      c: c.c,
-      h: c.h ?? 0,
-    }
-  } catch {
-    // fallback neutro seguro
-    return { l: 60, c: 0, h: 0 }
-  }
-}
-
-export function useTheme({ primary, secondary, tertiary }: Input) {
+export const useTheme = ({ primary, secondary, tertiary }: UseThemeProps) => {
   return useMemo(() => {
     const p = hexToOKLCH(primary)
     const s = hexToOKLCH(secondary)
@@ -104,11 +54,11 @@ export function useTheme({ primary, secondary, tertiary }: Input) {
     const baseHue = chromaSource?.h ?? 0
     const baseChromaScale = chromaSource ? 1 : 0
 
-    const base100: OKLCH = { l: 12, c: 0.08 * baseChromaScale, h: baseHue }
-    const base200: OKLCH = { l: 15, c: 0.06 * baseChromaScale, h: baseHue }
-    const base300: OKLCH = { l: 18, c: 0.05 * baseChromaScale, h: baseHue }
+    const base100: OKLCH = { l: 10, c: 0.09 * baseChromaScale, h: baseHue }
+    const base200: OKLCH = { l: 12, c: 0.08 * baseChromaScale, h: baseHue }
+    const base300: OKLCH = { l: 16, c: 0.075 * baseChromaScale, h: baseHue }
 
-    const neutral: OKLCH = { l: 22, c: 0.02 * baseChromaScale, h: baseHue }
+    const neutral: OKLCH = { l: 16, c: 0.025 * baseChromaScale, h: baseHue }
 
     return {
       '--color-base-100': toStr(base100),
