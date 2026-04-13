@@ -16,8 +16,9 @@ impl Default for Tactics {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum Formation {
+    #[default]
     #[serde(rename = "4-4-2")]
     F442,
     #[serde(rename = "4-3-3")]
@@ -33,6 +34,18 @@ pub enum Formation {
 }
 
 impl Formation {
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s.trim() {
+            "4-4-2" => Some(Formation::F442),
+            "4-3-3" => Some(Formation::F433),
+            "3-5-2" => Some(Formation::F352),
+            "5-3-2" => Some(Formation::F532),
+            "4-5-1" => Some(Formation::F451),
+            "3-4-3" => Some(Formation::F343),
+            _ => None,
+        }
+    }
+
     /// (defensores, meias, atacantes) — goleiro e sempre 1
     pub fn zone_counts(&self) -> (f64, f64, f64) {
         match self {
@@ -101,6 +114,18 @@ impl PlayStyle {
             PlayStyle::BolaDireta => [2, 1, 3, 1, 2, 1],
             PlayStyle::JogoAereo => [1, 1, 1, 1, 5, 1],
             PlayStyle::Normal => [3, 1, 1, 1, 1, 1],
+        }
+    }
+
+    /// Multiplicador de gasto de energia por estilo de jogo.
+    pub fn energy_drain_multiplier(&self) -> f64 {
+        match self {
+            PlayStyle::PressingAlto => 1.30,
+            PlayStyle::PosseDeBola  => 1.10,
+            PlayStyle::Normal       => 1.00,
+            PlayStyle::JogoAereo   => 1.05,
+            PlayStyle::Contraataque => 0.95,
+            PlayStyle::BolaDireta  => 0.90,
         }
     }
 }

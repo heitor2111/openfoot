@@ -23,6 +23,31 @@ pub struct Player {
     pub league_id: String,
     #[serde(default)]
     pub status: PlayerStatus,
+    /// Energia atual (0–100). Não persistida no JSON; inicializada em 100 na carreira.
+    #[serde(skip)]
+    pub energy: f64,
+}
+
+fn default_energy() -> f64 { 100.0 }
+
+impl Default for Player {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            name: String::new(),
+            position: Position::GOL,
+            speed: 50,
+            shooting: 50,
+            passing: 50,
+            dribbling: 50,
+            defense: 50,
+            stamina: 50,
+            team_id: String::new(),
+            league_id: String::new(),
+            status: PlayerStatus::default(),
+            energy: 100.0,
+        }
+    }
 }
 
 impl Player {

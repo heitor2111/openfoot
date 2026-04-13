@@ -1,4 +1,6 @@
 pub mod attributes;
+pub mod coach;
+pub mod energy;
 pub mod league;
 pub mod lineup;
 pub mod player;
@@ -6,6 +8,7 @@ pub mod probability;
 pub mod tactics;
 pub mod team;
 
+pub use coach::Coach;
 pub use league::League;
 pub use lineup::{LineupSlot, SavedLineup, SlotZone};
 pub use player::Player;

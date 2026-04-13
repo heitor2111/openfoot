@@ -59,6 +59,7 @@ pub fn load_all_leagues() -> Result<HashMap<String, League>> {
                     name: rec.name.clone(),
                     stadium: rec.stadium.clone(),
                     league_id: lr.id.clone(),
+                    coach: rec.coach.clone(),
                     squad,
                 })
             })

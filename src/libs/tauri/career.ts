@@ -16,6 +16,7 @@ export interface SquadPlayer {
   defense: number
   stamina: number
   status?: string
+  energy?: number
 }
 
 export interface TeamDetail {
@@ -35,6 +36,7 @@ export interface LeagueDetail {
 export interface LeagueOption {
   id: string
   name: string
+  country: string
   teams: TeamOption[]
 }
 
@@ -95,6 +97,7 @@ export interface RoundMatch {
   awayTeamName: string
   awayGoals: number
   events: MatchEvent[]
+  playerEnergyAfter?: Record<string, number>
 }
 
 export interface BackgroundGoalEvent {
@@ -126,6 +129,7 @@ export interface SimulateRoundResult {
   matches: RoundMatch[]
   backgroundLeagues: BackgroundLeagueRound[]
   snapshot: CareerSnapshot
+  playerEnergyAfter?: Record<string, number>
 }
 
 export type SlotZone = 'GOL' | 'DEF' | 'MEI' | 'ATA'
@@ -205,6 +209,7 @@ const normalizeTeam = (raw: RawTeam): TeamOption | null => {
 const normalizeLeague = (raw: RawLeague): LeagueOption | null => {
   const id = raw.id ?? raw.Id
   const name = raw.name ?? raw.Name
+  const country = raw.country ?? raw.Country ?? ''
   const teamsRaw = raw.teams ?? raw.Teams ?? []
 
   if (!id || !name) return null
@@ -212,6 +217,7 @@ const normalizeLeague = (raw: RawLeague): LeagueOption | null => {
   return {
     id,
     name,
+    country,
     teams: teamsRaw.map(normalizeTeam).filter((team): team is TeamOption => team !== null),
   }
 }
@@ -333,3 +339,6 @@ export const saveLineup = async (lineup: SavedLineup) =>
 
 export const getLineup = async () =>
   invoke<SavedLineup>('get_lineup')
+
+export const getPlayerEnergies = async () =>
+  invoke<Record<string, number>>('get_player_energies')

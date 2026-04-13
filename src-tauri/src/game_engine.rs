@@ -1,5 +1,6 @@
-use crate::engine::match_engine::{simulate_full, simulate_silent, EventType, TeamSide};
-use crate::models::{League, Player};
+use crate::engine::match_engine::{simulate_full, simulate_silent, EventType, MatchPlayer, TeamSide};
+use crate::models::energy::{energy_drain, energy_recovery};
+use crate::models::{Coach, League, Player};
 use crate::models::lineup::SavedLineup;
 use crate::models::tactics::Tactics;
 use serde::Serialize;
@@ -11,6 +12,7 @@ struct TeamMeta {
     name: String,
     stadium: String,
     squad: Vec<Player>,
+    coach: Option<Coach>,
 }
 
 #[derive(Debug, Clone)]
@@ -45,6 +47,8 @@ pub struct CareerState {
     player_league_id: String,
     active_league_ids: Vec<String>,
     seasons: HashMap<String, LeagueSeasonState>,
+    /// Energia atual de cada jogador do time do jogador (playerId → 0..100).
+    pub player_energy: HashMap<String, f64>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -91,6 +95,8 @@ pub struct RoundMatchDto {
     away_team_name: String,
     away_goals: i32,
     events: Vec<MatchEventDto>,
+    /// Energia dos jogadores que integraram o elenco original (titular ou reserva) após esta partida.
+    player_energy_after: HashMap<String, f64>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -155,6 +161,8 @@ pub struct SimulateRoundResultDto {
     matches: Vec<RoundMatchDto>,
     background_leagues: Vec<BackgroundLeagueRoundDto>,
     snapshot: CareerSnapshotDto,
+    /// Energia de todos os jogadores do time do jogador após a rodada.
+    player_energy_after: HashMap<String, f64>,
 }
 
 pub fn start_career(league: &League, player_team_id: &str) -> Result<CareerState, String> {
@@ -212,11 +220,22 @@ pub fn start_career_multi(
         return Err(format!("Time '{}' nao encontrado na liga", player_team_id));
     }
 
+    // Inicializar energia de todos os jogadores do time do jogador em 100
+    let player_squad = seasons
+        .get(player_league_id)
+        .and_then(|s| s.teams.iter().find(|t| t.id.eq_ignore_ascii_case(player_team_id)))
+        .map(|t| &t.squad);
+
+    let player_energy: HashMap<String, f64> = player_squad
+        .map(|squad| squad.iter().map(|p| (p.id.clone(), 100.0)).collect())
+        .unwrap_or_default();
+
     Ok(CareerState {
         player_team_id: player_team_id.to_string(),
         player_league_id: player_league_id.to_string(),
         active_league_ids: dedup_active,
         seasons,
+        player_energy,
     })
 }
 
@@ -300,17 +319,18 @@ fn best_eleven(squad: &[Player]) -> Vec<Player> {
 
 fn squad_for_match(squad: &[Player], lineup: &SavedLineup) -> Vec<Player> {
     let lineup_ids = lineup.starter_ids();
-    if lineup_ids.len() >= 11 {
-        let filtered: Vec<Player> = squad
-            .iter()
-            .filter(|p| lineup_ids.iter().any(|id| id.eq_ignore_ascii_case(&p.id)))
-            .cloned()
-            .collect();
-        if filtered.len() >= 11 {
-            return filtered;
-        }
+    if lineup_ids.is_empty() {
+        return best_eleven(squad);
     }
-    best_eleven(squad)
+    let filtered: Vec<Player> = squad
+        .iter()
+        .filter(|p| lineup_ids.iter().any(|id| id.eq_ignore_ascii_case(&p.id)))
+        .cloned()
+        .collect();
+    if filtered.is_empty() {
+        return best_eleven(squad);
+    }
+    filtered
 }
 
 pub fn simulate_next_round(
@@ -335,35 +355,71 @@ pub fn simulate_next_round(
         let mut player_results = Vec::with_capacity(round_matches.len());
 
         let lineup_slot_zones = lineup.starter_slot_zones();
+        let starter_ids: std::collections::HashSet<String> = lineup
+            .starters
+            .iter()
+            .map(|s| s.player_id.to_lowercase())
+            .collect();
+        let bench_ids: std::collections::HashSet<String> = lineup
+            .bench
+            .iter()
+            .map(|id| id.to_lowercase())
+            .collect();
 
         for m in &round_matches {
             let home = &player_season.teams[m.home_idx];
             let away = &player_season.teams[m.away_idx];
 
-            let home_squad = if home.id.eq_ignore_ascii_case(&player_team_id) {
+            let is_player_home = home.id.eq_ignore_ascii_case(&player_team_id);
+            let is_player_away = away.id.eq_ignore_ascii_case(&player_team_id);
+
+            // Converter Vec<Player> em Vec<MatchPlayer> injetando energia corrente
+            let home_match_squad: Vec<MatchPlayer> = if is_player_home {
                 squad_for_match(&home.squad, lineup)
+                    .into_iter()
+                    .map(|p| {
+                        let energy = state.player_energy.get(&p.id).copied().unwrap_or(100.0);
+                        MatchPlayer { player: p, energy }
+                    })
+                    .collect()
             } else {
                 best_eleven(&home.squad)
-            };
-            let away_squad = if away.id.eq_ignore_ascii_case(&player_team_id) {
-                squad_for_match(&away.squad, lineup)
-            } else {
-                best_eleven(&away.squad)
+                    .into_iter()
+                    .map(|p| MatchPlayer { player: p, energy: 100.0 })
+                    .collect()
             };
 
-            let home_lineup_zones = if home.id.eq_ignore_ascii_case(&player_team_id) {
-                Some(&lineup_slot_zones)
+            let away_match_squad: Vec<MatchPlayer> = if is_player_away {
+                squad_for_match(&away.squad, lineup)
+                    .into_iter()
+                    .map(|p| {
+                        let energy = state.player_energy.get(&p.id).copied().unwrap_or(100.0);
+                        MatchPlayer { player: p, energy }
+                    })
+                    .collect()
             } else {
-                None
+                best_eleven(&away.squad)
+                    .into_iter()
+                    .map(|p| MatchPlayer { player: p, energy: 100.0 })
+                    .collect()
             };
-            let away_lineup_zones = if away.id.eq_ignore_ascii_case(&player_team_id) {
-                Some(&lineup_slot_zones)
+
+            let home_lineup_zones = if is_player_home { Some(&lineup_slot_zones) } else { None };
+            let away_lineup_zones = if is_player_away { Some(&lineup_slot_zones) } else { None };
+
+            let home_tactics = if is_player_home {
+                tactics.clone()
             } else {
-                None
+                home.coach.as_ref().map(|c| c.derive_tactics()).unwrap_or_default()
+            };
+            let away_tactics = if is_player_away {
+                tactics.clone()
+            } else {
+                away.coach.as_ref().map(|c| c.derive_tactics()).unwrap_or_default()
             };
 
             let (home_goals, away_goals, raw_events) =
-                simulate_full(home_squad, away_squad, &tactics, home_lineup_zones, away_lineup_zones);
+                simulate_full(home_match_squad, away_match_squad, &home_tactics, &away_tactics, home_lineup_zones, away_lineup_zones);
 
             update_table(
                 &mut player_season.table,
@@ -382,6 +438,7 @@ pub fn simulate_next_round(
                         EventType::Goal => "goal",
                         EventType::NearMiss => "shot",
                         EventType::Save => "dangerous",
+                        EventType::Injury => "injury",
                         _ => return None,
                     };
                     let (team_side, team_name) = match &event.team {
@@ -398,6 +455,39 @@ pub fn simulate_next_round(
                 })
                 .collect();
 
+            // Calcular player_energy_after para a partida do jogador
+            let match_energy_after = if is_player_home || is_player_away {
+                let player_season_ref = &player_season;
+                let team = if is_player_home {
+                    &player_season_ref.teams[m.home_idx]
+                } else {
+                    &player_season_ref.teams[m.away_idx]
+                };
+                team.squad
+                    .iter()
+                    .map(|p| {
+                        let current = state.player_energy.get(&p.id).copied().unwrap_or(100.0);
+                        let minutes = if starter_ids.contains(&p.id.to_lowercase()) { Some(90u8) }
+                            else if bench_ids.contains(&p.id.to_lowercase()) { Some(0u8) }
+                            else { None };
+                        let drain = match minutes {
+                            Some(m) => energy_drain(p.stamina, &tactics.play_style, m),
+                            None => 0.0,
+                        };
+                        let recovery = energy_recovery(p.stamina, minutes);
+                        let new_energy = (current - drain + recovery).clamp(0.0, 100.0);
+                        (p.id.clone(), new_energy)
+                    })
+                    .collect::<HashMap<_, _>>()
+            } else {
+                HashMap::new()
+            };
+
+            // Persistir energia atualizada no CareerState
+            for (id, val) in &match_energy_after {
+                state.player_energy.insert(id.clone(), *val);
+            }
+
             player_results.push(RoundMatchDto {
                 home_team_id: home.id.clone(),
                 home_team_name: home_name,
@@ -406,6 +496,7 @@ pub fn simulate_next_round(
                 away_team_name: away_name,
                 away_goals: away_goals as i32,
                 events,
+                player_energy_after: match_energy_after,
             });
         }
 
@@ -436,7 +527,12 @@ pub fn simulate_next_round(
                 let away = &season.teams[m.away_idx];
 
                 let (home_goals, away_goals, goal_events) =
-                    simulate_silent(best_eleven(&home.squad), best_eleven(&away.squad));
+                    simulate_silent(
+                        best_eleven(&home.squad),
+                        best_eleven(&away.squad),
+                        home.coach.as_ref().map(|c| c.derive_tactics()).unwrap_or_default(),
+                        away.coach.as_ref().map(|c| c.derive_tactics()).unwrap_or_default(),
+                    );
 
                 update_table(
                     &mut season.table,
@@ -497,6 +593,7 @@ pub fn simulate_next_round(
         matches: player_results,
         background_leagues: background_results,
         snapshot: snapshot(state),
+        player_energy_after: state.player_energy.clone(),
     })
 }
 
@@ -509,6 +606,7 @@ fn build_league_season(league: &League) -> Result<LeagueSeasonState, String> {
             name: team.name.clone(),
             stadium: team.stadium.clone(),
             squad: team.squad.clone(),
+            coach: team.coach.clone(),
         })
         .collect();
 

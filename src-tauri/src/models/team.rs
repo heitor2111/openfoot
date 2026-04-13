@@ -1,6 +1,7 @@
 // src-tauri/src/models/team.rs
 use serde::{Deserialize, Serialize};
 use crate::models::Player;
+use crate::models::coach::Coach;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
@@ -10,6 +11,8 @@ pub struct Team {
     #[serde(default)]
     pub stadium: String,
     pub league_id: String,
+    #[serde(default)]
+    pub coach: Option<Coach>,
     #[serde(default)]
     pub squad: Vec<Player>,
 }
@@ -57,4 +60,6 @@ pub struct TeamRecord {
     #[serde(default)]
     pub stadium: String,
     pub league_id: String,
+    #[serde(default)]
+    pub coach: Option<Coach>,
 }

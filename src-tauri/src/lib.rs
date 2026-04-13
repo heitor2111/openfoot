@@ -196,6 +196,15 @@ fn save_lineup(lineup: SavedLineup, state: State<AppState>) -> Result<(), String
 }
 
 #[tauri::command]
+fn get_player_energies(state: State<AppState>) -> Result<HashMap<String, f64>, String> {
+    let career_guard = state.career.lock().unwrap();
+    let career = career_guard
+        .as_ref()
+        .ok_or_else(|| "Nenhuma carreira iniciada".to_string())?;
+    Ok(career.player_energy.clone())
+}
+
+#[tauri::command]
 fn get_lineup(state: State<AppState>) -> Result<SavedLineup, String> {
     let lineup = state.lineup.lock().unwrap();
     Ok(lineup.clone().unwrap_or_default())
@@ -218,6 +227,7 @@ pub fn run() {
             get_career_snapshot,
             save_lineup,
             get_lineup,
+            get_player_energies,
         ])
         .run(tauri::generate_context!())
         .expect("Erro ao iniciar o app");

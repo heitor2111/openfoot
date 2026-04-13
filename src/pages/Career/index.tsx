@@ -4,6 +4,7 @@ import {
   fetchLeague,
   getLineup,
   getCareerSnapshot,
+  getPlayerEnergies,
   saveLineup,
   simulateCareerRound,
   type CareerSnapshot,
@@ -73,6 +74,12 @@ const MENU_ITEMS: MenuItem[] = [
   { key: null, label: 'Departamentos', icon: '🏢', comingSoon: true },
   { key: null, label: 'Estatisticas', icon: '📊', comingSoon: true },
 ]
+
+const abbrevName = (name: string) => {
+  const parts = name.trim().split(' ')
+  if (parts.length <= 1) return name
+  return `${parts[0][0]}. ${parts.slice(1).join(' ')}`
+}
 
 const computeOvr = (player: SquadPlayer) => {
   const total =
@@ -206,6 +213,7 @@ const Career = () => {
   const [subInPlayerId, setSubInPlayerId] = useState('')
   const [recentSubstitution, setRecentSubstitution] = useState<RecentSubstitution | null>(null)
   const [benchSlots, setBenchSlots] = useState<BenchSlot[]>(() => emptyBenchSlots())
+  const [playerEnergies, setPlayerEnergies] = useState<Record<string, number>>({})
 
   const pendingResult = useRef<SimulateRoundResult | null>(null)
   const justDroppedRef = useRef(false)
@@ -262,6 +270,9 @@ const Career = () => {
           setSavedSlots(loadedSlots.map((slot) => ({ ...slot })))
           setBenchSlots(buildBenchSlotsWithIds(benchFromSave))
           setIsDirty(false)
+
+          const energies = await getPlayerEnergies().catch(() => ({}))
+          setPlayerEnergies(energies)
         }
 
         setStatus(`Carreira carregada: rodada ${cached.currentRound}/${cached.totalRounds}`)
@@ -329,6 +340,7 @@ const Career = () => {
     setSubInPlayerId('')
     setRecentSubstitution(null)
     setIsDirty(false)
+    if (result.playerEnergyAfter) setPlayerEnergies(result.playerEnergyAfter)
     setStatus(`Rodada ${result.playedRound} concluida.`)
     setBusy(false)
     pendingResult.current = null
@@ -687,6 +699,7 @@ const Career = () => {
         setLiveMinute(90)
         setSnapshot(result.snapshot)
         setLastRoundMatches(result.matches)
+        if (result.playerEnergyAfter) setPlayerEnergies(result.playerEnergyAfter)
         setStatus(`Rodada ${result.playedRound} concluida.`)
         setLiveState('done')
         setBusy(false)
@@ -1186,6 +1199,9 @@ const Career = () => {
                                   const player = squad.find((p) => p.id === slot.playerId)
                                   const isSelectedOut = subOutSlotIdx === idx
                                   const isFlashing = recentSubstitution?.slotIdx === idx
+                                  const energy = player ? (playerEnergies[player.id] ?? 100) : 100
+                                  const energyColor =
+                                    energy >= 70 ? 'bg-success' : energy >= 40 ? 'bg-warning' : 'bg-error'
 
                                   return (
                                     <button
@@ -1211,9 +1227,20 @@ const Career = () => {
                                         )}
                                       </div>
                                       <div className='truncate font-medium'>
-                                        {player ? player.name.split(' ')[0] : 'Vazio'}
+                                        {player ? abbrevName(player.name) : 'Vazio'}
                                       </div>
                                       <div className='opacity-60'>OVR {player ? computeOvr(player) : '--'}</div>
+                                      {player && (
+                                        <div className='mt-1'>
+                                          <div className='w-full h-1 rounded-full bg-base-300 overflow-hidden'>
+                                            <div
+                                              className={`h-full rounded-full ${energyColor}`}
+                                              style={{ width: `${Math.round(energy)}%` }}
+                                            />
+                                          </div>
+                                          <div className='text-[9px] opacity-50 mt-0.5'>{Math.round(energy)}% nrg</div>
+                                        </div>
+                                      )}
                                     </button>
                                   )
                                 })}
@@ -1230,6 +1257,9 @@ const Career = () => {
                         <div className='max-h-52 space-y-1 overflow-y-auto pr-1'>
                           {eligibleBenchPlayers.map((player) => {
                             const selected = subInPlayerId === player.id
+                            const energy = playerEnergies[player.id] ?? 100
+                            const energyColor =
+                              energy >= 70 ? 'bg-success' : energy >= 40 ? 'bg-warning' : 'bg-error'
                             return (
                               <button
                                 key={`pause-bench-${player.id}`}
@@ -1243,9 +1273,16 @@ const Career = () => {
                                     : 'border-base-content/15 bg-base-100 hover:border-primary/40',
                                 ].join(' ')}
                               >
-                                <span className='truncate text-left'>
-                                  {player.name} ({player.position})
-                                </span>
+                                <div className='min-w-0 flex-1 text-left'>
+                                  <div className='truncate'>{abbrevName(player.name)} ({player.position})</div>
+                                  <div className='mt-0.5 h-1 w-full rounded-full bg-base-300 overflow-hidden'>
+                                    <div
+                                      className={`h-full rounded-full ${energyColor}`}
+                                      style={{ width: `${Math.round(energy)}%` }}
+                                    />
+                                  </div>
+                                  <div className='text-[9px] opacity-50 mt-0.5'>{Math.round(energy)}% nrg</div>
+                                </div>
                                 <span className='ml-2 shrink-0 font-mono font-bold'>OVR {computeOvr(player)}</span>
                               </button>
                             )
@@ -1445,11 +1482,20 @@ const Career = () => {
                                 >
                                   <div className='font-bold text-[9px] opacity-50 mb-0.5'>{zone}</div>
                                   <div className='font-semibold truncate leading-tight'>
-                                    {player ? player.name.split(' ')[0] : 'Vazio'}
+                                    {player ? abbrevName(player.name) : 'Vazio'}
                                   </div>
-                                  {player && (
-                                    <div className='font-mono text-[10px] opacity-60'>{computeOvr(player)}</div>
-                                  )}
+                                  {player && (() => {
+                                    const e = playerEnergies[player.id] ?? 100
+                                    const ec = e >= 70 ? 'bg-success' : e >= 40 ? 'bg-warning' : 'bg-error'
+                                    return (
+                                      <>
+                                        <div className='font-mono text-[10px] opacity-60'>{computeOvr(player)}</div>
+                                        <div className='mt-1 h-1 w-full rounded-full bg-black/30 overflow-hidden'>
+                                          <div className={`h-full rounded-full ${ec}`} style={{ width: `${Math.round(e)}%` }} />
+                                        </div>
+                                      </>
+                                    )
+                                  })()}
                                 </button>
 
                                 {/* Dropdown do slot */}
@@ -1593,11 +1639,20 @@ const Career = () => {
                               <span className='text-[10px] opacity-60'>#{benchIdx + 1}</span>
                             </div>
                             <div className='truncate font-semibold leading-tight'>
-                              {player ? player.name.split(' ')[0] : 'Vazio'}
+                              {player ? abbrevName(player.name) : 'Vazio'}
                             </div>
                             <div className='text-[10px] opacity-65'>
                               {player ? `OVR ${computeOvr(player)}` : 'Arraste um jogador'}
                             </div>
+                            {player && (() => {
+                              const e = playerEnergies[player.id] ?? 100
+                              const ec = e >= 70 ? 'bg-success' : e >= 40 ? 'bg-warning' : 'bg-error'
+                              return (
+                                <div className='mt-1 h-1 w-full rounded-full bg-black/30 overflow-hidden'>
+                                  <div className={`h-full rounded-full ${ec}`} style={{ width: `${Math.round(e)}%` }} />
+                                </div>
+                              )
+                            })()}
                           </button>
                         )
                       })}
@@ -1609,9 +1664,21 @@ const Career = () => {
                     <p className='text-xs opacity-50'>Arraste para um slot ou clique no slot para abrir opcoes</p>
                     <div className='overflow-y-auto max-h-96 space-y-0.5 pr-1'>
                       {squad.map((player) => {
-                        const isAssigned =
-                          slots.some((s) => s.playerId === player.id) ||
-                          benchSlots.some((s) => s.playerId === player.id)
+                        const isStarter = slots.some((s) => s.playerId === player.id)
+                        const isBench = benchSlots.some((s) => s.playerId === player.id)
+                        const isAssigned = isStarter || isBench
+                        const energy = playerEnergies[player.id] ?? 100
+                        const energyColor =
+                          energy >= 70 ? 'bg-success' : energy >= 40 ? 'bg-warning' : 'bg-error'
+
+                        const handleUnassign = () => {
+                          if (isStarter) {
+                            setSlots((curr) => curr.map((s) => s.playerId === player.id ? { ...s, playerId: null } : s))
+                          } else if (isBench) {
+                            setBenchSlots((curr) => curr.map((s) => s.playerId === player.id ? { playerId: null } : s))
+                          }
+                        }
+
                         return (
                           <div
                             key={player.id}
@@ -1620,14 +1687,29 @@ const Career = () => {
                               setDragSource({ type: 'list', idx: -1, playerId: player.id })
                               setDragPos({ x: e.clientX, y: e.clientY })
                             }}
+                            onClick={() => {
+                              if (isAssigned) handleUnassign()
+                            }}
                             className={[
-                              'rounded px-2 py-1.5 text-xs flex items-center justify-between gap-1 cursor-grab transition-colors select-none',
-                              isAssigned ? 'opacity-40 cursor-not-allowed' : 'hover:bg-primary/20',
+                              'rounded px-2 py-1.5 text-xs flex items-center justify-between gap-1 transition-colors select-none',
+                              isAssigned
+                                ? 'cursor-pointer hover:bg-error/15 border border-transparent hover:border-error/30'
+                                : 'cursor-grab hover:bg-primary/20',
                             ].join(' ')}
                           >
-                            <div className='min-w-0'>
-                              <span className='font-semibold truncate block'>{player.name}</span>
+                            <div className='min-w-0 flex-1'>
+                              <div className='flex items-center gap-1.5'>
+                                <span className='font-semibold truncate'>{abbrevName(player.name)}</span>
+                                {isStarter && <span className='shrink-0 rounded bg-primary/30 px-1 text-[9px] font-bold text-primary'>TIT</span>}
+                                {isBench && <span className='shrink-0 rounded bg-base-content/20 px-1 text-[9px] font-bold opacity-70'>RES</span>}
+                              </div>
                               <span className='opacity-50'>{player.position}</span>
+                              <div className='mt-1 h-1 w-full rounded-full bg-base-300 overflow-hidden'>
+                                <div
+                                  className={`h-full rounded-full transition-all ${energyColor}`}
+                                  style={{ width: `${Math.round(energy)}%` }}
+                                />
+                              </div>
                             </div>
                             <span className='font-mono font-bold shrink-0'>{computeOvr(player)}</span>
                           </div>
@@ -1667,7 +1749,7 @@ const Career = () => {
             style={{ position: 'fixed', left: dragPos.x - 36, top: dragPos.y - 24, zIndex: 9999, pointerEvents: 'none' }}
             className='rounded-md px-2 py-1.5 text-center w-[4.5rem] text-xs bg-yellow-400/20 border-2 border-yellow-400 text-yellow-100'
           >
-            {squad.find((p) => p.id === dragSource.playerId)?.name.split(' ')[0]}
+            {abbrevName(squad.find((p) => p.id === dragSource.playerId)?.name ?? '')}
           </div>
         )}
       </div>

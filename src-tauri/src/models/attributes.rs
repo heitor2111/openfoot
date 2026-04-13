@@ -88,9 +88,14 @@ impl Attributes {
     }
 
     pub fn get_effective_attribute(&self, attr: AttributeKind, sta_atual: u8) -> f64 {
+        self.get_effective_attribute_with_energy(attr, sta_atual, 100.0)
+    }
+
+    pub fn get_effective_attribute_with_energy(&self, attr: AttributeKind, sta_atual: u8, energy: f64) -> f64 {
+        use crate::models::energy::energy_performance_multiplier;
         let base = self.attribute_value(attr) as f64;
         let sta_factor = 0.4 + (sta_atual.min(100) as f64 / 100.0) * 0.6;
-        base * sta_factor
+        base * sta_factor * energy_performance_multiplier(energy)
     }
 
     fn attribute_value(&self, attr: AttributeKind) -> u8 {
@@ -258,6 +263,7 @@ mod tests {
             team_id: "t-1".to_string(),
             league_id: "l-1".to_string(),
             status: PlayerStatus::default(),
+            energy: 100.0,
         }
     }
 

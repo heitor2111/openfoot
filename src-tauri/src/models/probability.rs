@@ -61,7 +61,8 @@ mod tests {
     #[test]
     fn goal_probability_with_equal_strengths_is_about_point_twenty_five() {
         let value = goal_probability(50.0, 50.0);
-        assert!((value - 0.25).abs() < 1e-9);
+        // 50² / (50² + 50²) * 0.35 = 0.5 * 0.35 = 0.175
+        assert!((value - 0.175).abs() < 1e-9);
     }
 
     #[test]

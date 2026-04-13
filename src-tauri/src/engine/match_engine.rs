@@ -13,6 +13,12 @@ use crate::models::probability::{
 };
 use crate::models::tactics::{PlayStyle, Tactics, TacticsZone};
 
+#[derive(Clone, Debug)]
+pub struct MatchPlayer {
+    pub player: Player,
+    pub energy: f64,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MatchState {
     pub minute: u8,
@@ -49,6 +55,7 @@ pub enum EventType {
     NearMiss,
     Save,
     KickOff,
+    Injury,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -57,7 +64,7 @@ pub enum TeamSide {
     Away,
 }
 
-pub fn simulate_tick(state: &mut MatchState, tactics: &Tactics) -> Option<MatchEvent> {
+pub fn simulate_tick(state: &mut MatchState, home_tactics: &Tactics, away_tactics: &Tactics) -> Option<MatchEvent> {
     if state.is_paused || state.is_finished {
         return None;
     }
@@ -76,15 +83,15 @@ pub fn simulate_tick(state: &mut MatchState, tactics: &Tactics) -> Option<MatchE
     let home_mid = zone_strength_with_tactics(
         &state.home_squad,
         TacticsZone::Midfield,
-        &tactics.formation,
-        &tactics.play_style,
+        &home_tactics.formation,
+        &home_tactics.play_style,
         state.home_lineup_zones.as_ref(),
     );
     let away_mid = zone_strength_with_tactics(
         &state.away_squad,
         TacticsZone::Midfield,
-        &tactics.formation,
-        &tactics.play_style,
+        &away_tactics.formation,
+        &away_tactics.play_style,
         state.away_lineup_zones.as_ref(),
     );
     let home_advances = zone_contest(home_mid, away_mid);
@@ -110,7 +117,7 @@ pub fn simulate_tick(state: &mut MatchState, tactics: &Tactics) -> Option<MatchE
             &away_squad,
             home_lineup_zones.as_ref(),
             away_lineup_zones.as_ref(),
-            tactics,
+            home_tactics,
         )
     } else {
         resolve_attack(
@@ -122,7 +129,7 @@ pub fn simulate_tick(state: &mut MatchState, tactics: &Tactics) -> Option<MatchE
             &home_squad,
             away_lineup_zones.as_ref(),
             home_lineup_zones.as_ref(),
-            tactics,
+            away_tactics,
         )
     };
 
@@ -130,8 +137,7 @@ pub fn simulate_tick(state: &mut MatchState, tactics: &Tactics) -> Option<MatchE
     tick_event
 }
 
-pub fn simulate_silent(home: Vec<Player>, away: Vec<Player>) -> (u8, u8, Vec<(u8, TeamSide)>) {
-    let tactics = Tactics::default();
+pub fn simulate_silent(home: Vec<Player>, away: Vec<Player>, home_tactics: Tactics, away_tactics: Tactics) -> (u8, u8, Vec<(u8, TeamSide)>) {
     let mut home_score = 0u8;
     let mut away_score = 0u8;
     let mut goal_events: Vec<(u8, TeamSide)> = Vec::new();
@@ -140,15 +146,15 @@ pub fn simulate_silent(home: Vec<Player>, away: Vec<Player>) -> (u8, u8, Vec<(u8
         let home_mid = zone_strength_with_tactics(
             &home,
             TacticsZone::Midfield,
-            &tactics.formation,
-            &tactics.play_style,
+            &home_tactics.formation,
+            &home_tactics.play_style,
             None,
         );
         let away_mid = zone_strength_with_tactics(
             &away,
             TacticsZone::Midfield,
-            &tactics.formation,
-            &tactics.play_style,
+            &away_tactics.formation,
+            &away_tactics.play_style,
             None,
         );
         let home_advances = zone_contest(home_mid, away_mid);
@@ -158,9 +164,9 @@ pub fn simulate_silent(home: Vec<Player>, away: Vec<Player>) -> (u8, u8, Vec<(u8
         }
 
         let scored = if home_advances {
-            silent_attack_resolves(&home, &away, TeamSide::Home, &tactics)
+            silent_attack_resolves(&home, &away, TeamSide::Home, &home_tactics)
         } else {
-            silent_attack_resolves(&away, &home, TeamSide::Away, &tactics)
+            silent_attack_resolves(&away, &home, TeamSide::Away, &away_tactics)
         };
 
         match scored {
@@ -180,9 +186,10 @@ pub fn simulate_silent(home: Vec<Player>, away: Vec<Player>) -> (u8, u8, Vec<(u8
 }
 
 pub fn simulate_full(
-    home: Vec<Player>,
-    away: Vec<Player>,
-    tactics: &Tactics,
+    home: Vec<MatchPlayer>,
+    away: Vec<MatchPlayer>,
+    home_tactics: &Tactics,
+    away_tactics: &Tactics,
     home_lineup_zones: Option<&HashMap<String, SlotZone>>,
     away_lineup_zones: Option<&HashMap<String, SlotZone>>,
 ) -> (u8, u8, Vec<MatchEvent>) {
@@ -190,8 +197,8 @@ pub fn simulate_full(
         minute: 1,
         home_score: 0,
         away_score: 0,
-        home_squad: home,
-        away_squad: away,
+        home_squad: home.into_iter().map(|mp| mp.player).collect(),
+        away_squad: away.into_iter().map(|mp| mp.player).collect(),
         home_lineup_zones: home_lineup_zones.cloned(),
         away_lineup_zones: away_lineup_zones.cloned(),
         is_paused: false,
@@ -200,7 +207,7 @@ pub fn simulate_full(
     };
 
     while !state.is_finished {
-        simulate_tick(&mut state, tactics);
+        simulate_tick(&mut state, home_tactics, away_tactics);
     }
 
     (state.home_score.min(15), state.away_score.min(15), state.events)
@@ -492,7 +499,11 @@ pub fn zone_strength_with_tactics(
         TacticsZone::Attack => atk_mod,
     };
 
-    base * formation_mul * style_mul
+    // Times com menos de 11 têm buracos no campo em todas as zonas.
+    // 7 jogadores → 64% de cobertura; 11 → 100%.
+    let squad_coverage = (players.len() as f64 / 11.0).min(1.0);
+
+    base * formation_mul * style_mul * squad_coverage
 }
 
 fn slot_zone_matches_tactics(slot_zone: SlotZone, tactics_zone: TacticsZone) -> bool {
@@ -563,6 +574,7 @@ mod tests {
             team_id: "team-1".to_string(),
             league_id: "league-1".to_string(),
             status: PlayerStatus::Titular,
+            energy: 100.0,
         }
     }
 
@@ -584,7 +596,7 @@ mod tests {
 
     #[test]
     fn simulate_silent_returns_reasonable_score_range() {
-        let (home, away, _) = simulate_silent(sample_squad("h"), sample_squad("a"));
+        let (home, away, _) = simulate_silent(sample_squad("h"), sample_squad("a"), Tactics::default(), Tactics::default());
         assert!((0..=15).contains(&home));
         assert!((0..=15).contains(&away));
     }
@@ -597,13 +609,15 @@ mod tests {
             away_score: 0,
             home_squad: sample_squad("h"),
             away_squad: sample_squad("a"),
+            home_lineup_zones: None,
+            away_lineup_zones: None,
             is_paused: false,
             is_finished: false,
             events: Vec::new(),
         };
 
         let tactics = Tactics::default();
-        let event = simulate_tick(&mut state, &tactics).expect("expected halftime event");
+        let event = simulate_tick(&mut state, &tactics, &tactics).expect("expected halftime event");
         assert!(matches!(event.event_type, EventType::HalfTime));
     }
 
@@ -615,13 +629,15 @@ mod tests {
             away_score: 0,
             home_squad: sample_squad("h"),
             away_squad: sample_squad("a"),
+            home_lineup_zones: None,
+            away_lineup_zones: None,
             is_paused: false,
             is_finished: false,
             events: Vec::new(),
         };
 
         let tactics = Tactics::default();
-        let event = simulate_tick(&mut state, &tactics).expect("expected fulltime event");
+        let event = simulate_tick(&mut state, &tactics, &tactics).expect("expected fulltime event");
         assert!(matches!(event.event_type, EventType::FullTime));
         assert!(state.is_finished);
     }
