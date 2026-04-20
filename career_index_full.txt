@@ -1,0 +1,1629 @@
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
+
+import {
+  fetchLeague,
+  getLineup,
+  getCareerSnapshot,
+  saveLineup,
+  simulateCareerRound,
+  type CareerSnapshot,
+  type MatchEvent,
+  type RoundMatch,
+  type SimulateRoundResult,
+  type SquadPlayer,
+} from '@/libs/tauri/career'
+
+type TabKey = 'partida' | 'escalacao'
+type Formation = '4-4-2' | '4-3-3' | '3-5-2' | '5-3-2' | '4-5-1' | '3-4-3'
+type PlayStyle =
+  | 'Pressing Alto'
+  | 'Posse de Bola'
+  | 'Contra-ataque'
+  | 'Bola Direta'
+  | 'Jogo Aereo'
+type SpeedKey = 'devagar' | 'normal' | 'rapido' | 'instantaneo'
+type LiveState = 'idle' | 'running' | 'paused' | 'done'
+type SquadStatus = 'Titular' | 'Reserva'
+
+type SquadRow = SquadPlayer & {
+  status: SquadStatus
+}
+
+const FORMATIONS: Formation[] = ['4-4-2', '4-3-3', '3-5-2', '5-3-2', '4-5-1', '3-4-3']
+const PLAY_STYLES: PlayStyle[] = [
+  'Pressing Alto',
+  'Posse de Bola',
+  'Contra-ataque',
+  'Bola Direta',
+  'Jogo Aereo',
+]
+const SPEED_LABELS: Record<SpeedKey, string> = {
+  devagar: 'Devagar',
+  normal: 'Normal',
+  rapido: 'Rapido',
+  instantaneo: 'Instantaneo',
+}
+const SPEED_DELAYS: Record<SpeedKey, number> = {
+  devagar: 150,
+  normal: 60,
+  rapido: 20,
+  instantaneo: 0,
+}
+
+const EVENT_STYLES: Record<string, { label: string; cls: string }> = {
+  goal: { label: 'GOL', cls: 'bg-primary text-primary-content' },
+  shot: { label: 'Chute', cls: 'bg-warning/30 text-warning-content' },
+  dangerous: { label: 'Perigo', cls: 'bg-base-300 text-base-content' },
+}
+
+type MenuItem = {
+  key: TabKey | null
+  label: string
+  icon: string
+  comingSoon?: boolean
+}
+
+const MENU_ITEMS: MenuItem[] = [
+  { key: 'partida', label: 'Partida', icon: 'â–¶' },
+  { key: 'escalacao', label: 'Elenco', icon: 'ðŸ‘¥' },
+  { key: null, label: 'Calendario', icon: 'ðŸ“…', comingSoon: true },
+  { key: null, label: 'Transferencias', icon: 'ðŸ’¸', comingSoon: true },
+  { key: null, label: 'Departamentos', icon: 'ðŸ¢', comingSoon: true },
+  { key: null, label: 'Estatisticas', icon: 'ðŸ“Š', comingSoon: true },
+]
+
+const computeOvr = (player: SquadPlayer) => {
+  const total =
+    player.speed +
+    player.shooting +
+    player.passing +
+    player.dribbling +
+    player.defense +
+    player.stamina
+  return Math.round(total / 6)
+}
+
+const normalizePosition = (position: string) => position.trim().toUpperCase()
+
+type SlotZone = 'GOL' | 'DEF' | 'MEI' | 'ATA'
+
+type FieldSlot = {
+  zone: SlotZone
+  playerId: string | null
+}
+
+type RecentSubstitution = {
+  slotIdx: number
+  zone: SlotZone
+  outPlayerName: string
+  inPlayerName: string
+  minute: number
+}
+
+const ZONE_POSITIONS: Record<SlotZone, string[]> = {
+  GOL: ['GOL', 'GK', 'GOALKEEPER', 'GOLEIRO'],
+  DEF: ['ZAG', 'LAT_E', 'LAT_D', 'DF', 'DEFENDER', 'SB', 'SIDE_BACK', 'ZAGUEIRO', 'LATERAL'],
+  MEI: ['VOL', 'MEI', 'MEI_A', 'MF', 'MIDFIELDER', 'MEIO', 'MEIA'],
+  ATA: ['ATA', 'SA', 'PNT_E', 'PNT_D', 'FW', 'FORWARD', 'ATACANTE'],
+}
+
+const isPositionInZone = (zone: SlotZone, position: string) =>
+  ZONE_POSITIONS[zone].includes(normalizePosition(position))
+
+const isGoalkeeperPosition = (position: string) => isPositionInZone('GOL', position)
+
+const classifyOutfieldLine = (position: string): 'DEF' | 'MEI' | 'ATA' | null => {
+  if (isPositionInZone('DEF', position)) return 'DEF'
+  if (isPositionInZone('MEI', position)) return 'MEI'
+  if (isPositionInZone('ATA', position)) return 'ATA'
+  return null
+}
+
+const OUTFIELD_FALLBACK: Record<Exclude<SlotZone, 'GOL'>, Array<'DEF' | 'MEI' | 'ATA'>> = {
+  DEF: ['DEF', 'MEI', 'ATA'],
+  MEI: ['MEI', 'DEF', 'ATA'],
+  ATA: ['ATA', 'MEI', 'DEF'],
+}
+
+const FORMATION_SLOTS: Record<Formation, SlotZone[]> = {
+  '4-4-2': ['GOL', 'DEF', 'DEF', 'DEF', 'DEF', 'MEI', 'MEI', 'MEI', 'MEI', 'ATA', 'ATA'],
+  '4-3-3': ['GOL', 'DEF', 'DEF', 'DEF', 'DEF', 'MEI', 'MEI', 'MEI', 'ATA', 'ATA', 'ATA'],
+  '3-5-2': ['GOL', 'DEF', 'DEF', 'DEF', 'MEI', 'MEI', 'MEI', 'MEI', 'MEI', 'ATA', 'ATA'],
+  '5-3-2': ['GOL', 'DEF', 'DEF', 'DEF', 'DEF', 'DEF', 'MEI', 'MEI', 'MEI', 'ATA', 'ATA'],
+  '4-5-1': ['GOL', 'DEF', 'DEF', 'DEF', 'DEF', 'MEI', 'MEI', 'MEI', 'MEI', 'MEI', 'ATA'],
+  '3-4-3': ['GOL', 'DEF', 'DEF', 'DEF', 'MEI', 'MEI', 'MEI', 'MEI', 'ATA', 'ATA', 'ATA'],
+}
+
+const buildSlotsWithLineup = (formation: Formation, lineupIds: string[]): FieldSlot[] =>
+  FORMATION_SLOTS[formation].map((zone, i) => ({
+    zone,
+    playerId: lineupIds[i] ?? null,
+  }))
+
+const Career = () => {
+  const [activeTab, setActiveTab] = useState<TabKey>('partida')
+  const [snapshot, setSnapshot] = useState<CareerSnapshot | null>(null)
+  const [lastRoundMatches, setLastRoundMatches] = useState<RoundMatch[]>([])
+  const [squad, setSquad] = useState<SquadRow[]>([])
+  const [formation, setFormation] = useState<Formation>('4-4-2')
+  const [playStyle, setPlayStyle] = useState<PlayStyle>('Pressing Alto')
+  const [simSpeed, setSimSpeed] = useState<SpeedKey>('normal')
+  const [liveState, setLiveState] = useState<LiveState>('idle')
+  const [liveMinute, setLiveMinute] = useState(0)
+  const [liveHomeGoals, setLiveHomeGoals] = useState(0)
+  const [liveAwayGoals, setLiveAwayGoals] = useState(0)
+  const [liveEvents, setLiveEvents] = useState<MatchEvent[]>([])
+  const [bgEvents, setBgEvents] = useState<Array<{
+    minute: number
+    homeTeamName: string
+    awayTeamName: string
+    homeGoals: number
+    awayGoals: number
+  }>>([])
+  const [focusMatch, setFocusMatch] = useState<RoundMatch | null>(null)
+  const [playedRound, setPlayedRound] = useState(0)
+  const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState('Carregando carreira...')
+  const [slots, setSlots] = useState<FieldSlot[]>(() => buildSlotsWithLineup('4-4-2', []))
+  const [savedSlots, setSavedSlots] = useState<FieldSlot[]>([])
+  const [isDirty, setIsDirty] = useState(false)
+  const [selectedSlotIdx, setSelectedSlotIdx] = useState<number | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragPayload, setDragPayload] = useState<{ slotIdx: number; playerId: string | null } | null>(null)
+  const [dragCursor, setDragCursor] = useState<{ x: number; y: number } | null>(null)
+  const [subsUsed, setSubsUsed] = useState(0)
+  const [subWindowsUsed, setSubWindowsUsed] = useState(0)
+  const [subsInCurrentPause, setSubsInCurrentPause] = useState(0)
+  const [subOutSlotIdx, setSubOutSlotIdx] = useState<number | null>(null)
+  const [subInPlayerId, setSubInPlayerId] = useState('')
+  const [recentSubstitution, setRecentSubstitution] = useState<RecentSubstitution | null>(null)
+  const [benchSelectionIds, setBenchSelectionIds] = useState<string[]>([])
+
+  const pendingResult = useRef<SimulateRoundResult | null>(null)
+  const justDroppedRef = useRef(false)
+
+  const titularesCount = useMemo(
+    () => slots.filter((slot) => slot.playerId !== null).length,
+    [slots]
+  )
+
+  const slotsByZone = useMemo(() => {
+    const zoneOrder: SlotZone[] = ['ATA', 'MEI', 'DEF', 'GOL']
+    return zoneOrder.map((zone) => ({
+      zone,
+      entries: slots
+        .map((slot, idx) => ({ slot, idx }))
+        .filter(({ slot }) => slot.zone === zone),
+    }))
+  }, [slots])
+
+  const dragPreviewPlayer = useMemo(() => {
+    if (!dragPayload?.playerId) return null
+    return squad.find((p) => p.id === dragPayload.playerId) ?? null
+  }, [dragPayload, squad])
+
+  useEffect(() => {
+    const loadCareer = async () => {
+      setBusy(true)
+
+      try {
+        const cached = await getCareerSnapshot()
+        setSnapshot(cached)
+
+        const league = await fetchLeague(cached.leagueId)
+        const playerTeam = league.teams.find((team) => team.id === cached.playerTeamId)
+
+        if (playerTeam) {
+          const savedLineup = await getLineup().catch(() => [])
+          const loadedSlots = buildSlotsWithLineup(formation, savedLineup)
+          const orderedSquad = [...playerTeam.squad]
+            .map((player) => ({ ...player, status: 'Reserva' as SquadStatus }))
+            .sort((a, b) => computeOvr(b) - computeOvr(a))
+          const defaultBench = orderedSquad
+            .filter((player) => !loadedSlots.some((slot) => slot.playerId === player.id))
+            .slice(0, 0)
+            .map((player) => player.id)
+
+          setSquad(orderedSquad)
+          setSlots(loadedSlots)
+          setSavedSlots(loadedSlots.map((slot) => ({ ...slot })))
+          setBenchSelectionIds(defaultBench)
+          setIsDirty(false)
+        }
+
+        setStatus(`Carreira carregada: rodada ${cached.currentRound}/${cached.totalRounds}`)
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : 'Nenhuma carreira ativa')
+      } finally {
+        setBusy(false)
+      }
+    }
+
+    void loadCareer()
+  }, [])
+
+  useEffect(() => {
+    if (liveState !== 'running') return
+
+    if (liveMinute >= 90) {
+      setLiveState('done')
+      return
+    }
+
+    const timer = setTimeout(() => {
+      setLiveMinute((current) => current + 1)
+    }, SPEED_DELAYS[simSpeed])
+
+    return () => clearTimeout(timer)
+  }, [liveMinute, liveState, simSpeed])
+
+  useEffect(() => {
+    if (liveState !== 'running' || !focusMatch) return
+
+    const minuteEvents = focusMatch.events.filter((event) => event.minute === liveMinute)
+    if (minuteEvents.length === 0) return
+
+    setLiveEvents((current) => [...current, ...minuteEvents])
+
+    const homeGoals = minuteEvents.filter(
+      (event) => event.eventType === 'goal' && event.teamSide === 'home'
+    ).length
+    const awayGoals = minuteEvents.filter(
+      (event) => event.eventType === 'goal' && event.teamSide === 'away'
+    ).length
+
+    if (homeGoals > 0) {
+      setLiveHomeGoals((current) => current + homeGoals)
+    }
+    if (awayGoals > 0) {
+      setLiveAwayGoals((current) => current + awayGoals)
+    }
+  }, [focusMatch, liveMinute, liveState])
+
+  useEffect(() => {
+    if (liveState !== 'done') return
+
+    const result = pendingResult.current
+    if (!result) return
+
+    setSnapshot(result.snapshot)
+    setLastRoundMatches(result.matches)
+    setSlots(savedSlots.map((slot) => ({ ...slot })))
+    setSubsUsed(0)
+    setSubWindowsUsed(0)
+    setSubsInCurrentPause(0)
+    setSubOutSlotIdx(null)
+    setSubInPlayerId('')
+    setRecentSubstitution(null)
+    setIsDirty(false)
+    setStatus(`Rodada ${result.playedRound} concluida.`)
+    setBusy(false)
+    pendingResult.current = null
+  }, [liveState, savedSlots])
+
+  useEffect(() => {
+    if (!recentSubstitution) return
+
+    const timer = setTimeout(() => {
+      setRecentSubstitution(null)
+    }, 2800)
+
+    return () => clearTimeout(timer)
+  }, [recentSubstitution])
+
+  useEffect(() => {
+    const titularIds = new Set(slots.map((slot) => slot.playerId).filter((id): id is string => id !== null))
+    const squadIds = new Set(squad.map((player) => player.id))
+
+    setBenchSelectionIds((current) => {
+      const filtered = current.filter((id) => squadIds.has(id) && !titularIds.has(id))
+      return filtered.length > 7 ? filtered.slice(0, 7) : filtered
+    })
+  }, [slots, squad])
+
+  const skipLive = () => {
+    if (!focusMatch) return
+
+    setLiveEvents(focusMatch.events)
+    setLiveHomeGoals(focusMatch.homeGoals)
+    setLiveAwayGoals(focusMatch.awayGoals)
+    setLiveMinute(90)
+    setLiveState('done')
+  }
+
+  const pauseLive = () => {
+    if (liveState !== 'running') return
+    setLiveState('paused')
+    setSubsInCurrentPause(0)
+    setStatus('Partida pausada. Ajuste tatica e escalacao e retome quando quiser.')
+  }
+
+  const resumeLive = () => {
+    if (liveState !== 'paused') return
+
+    const intervalPause = liveMinute >= 45 && liveMinute < 46
+    if (subsInCurrentPause > 0 && !intervalPause) {
+      setSubWindowsUsed((v) => v + 1)
+    }
+
+    setSubsInCurrentPause(0)
+    setLiveState('running')
+    setStatus(`Rodada ${playedRound} em andamento...`)
+  }
+
+  const handleInMatchSubstitution = () => {
+    if (liveState !== 'paused') return
+
+    const intervalPause = liveMinute >= 45 && liveMinute < 46
+    const needsNewWindow = subsInCurrentPause === 0
+
+    if (subsUsed >= 5) {
+      setStatus('Limite atingido: maximo de 5 substituicoes.')
+      return
+    }
+
+    if (!intervalPause && needsNewWindow && subWindowsUsed >= 3) {
+      setStatus('Limite atingido: maximo de 3 janelas de substituicao.')
+      return
+    }
+
+    if (subOutSlotIdx === null || !subInPlayerId) {
+      setStatus('Selecione quem sai e quem entra.')
+      return
+    }
+
+    if (!benchSelectionIds.includes(subInPlayerId)) {
+      setStatus('Esse atleta nao esta elegivel no banco de reservas.')
+      return
+    }
+
+    const outPlayerId = slots[subOutSlotIdx]?.playerId
+    if (!outPlayerId) {
+      setStatus('O slot selecionado para sair esta vazio.')
+      return
+    }
+
+    const outPlayer = squad.find((p) => p.id === outPlayerId)
+    const inPlayer = squad.find((p) => p.id === subInPlayerId)
+
+    const inAlreadyPlaying = slots.some((slot) => slot.playerId === subInPlayerId)
+    if (inAlreadyPlaying) {
+      setStatus('Jogador escolhido para entrar ja esta em campo.')
+      return
+    }
+
+    setSlots((curr) => curr.map((slot, idx) => (
+      idx === subOutSlotIdx ? { ...slot, playerId: subInPlayerId } : slot
+    )))
+    setSubsUsed((v) => v + 1)
+    setSubsInCurrentPause((v) => v + 1)
+    setRecentSubstitution({
+      slotIdx: subOutSlotIdx,
+      zone: slots[subOutSlotIdx].zone,
+      outPlayerName: outPlayer?.name ?? 'Saiu',
+      inPlayerName: inPlayer?.name ?? 'Entrou',
+      minute: liveMinute,
+    })
+    setSubOutSlotIdx(null)
+    setSubInPlayerId('')
+    const nextWindowCount = !intervalPause && needsNewWindow ? subWindowsUsed + 1 : subWindowsUsed
+    setStatus(`Substituicao feita (${subsUsed + 1}/5 atletas, ${nextWindowCount}/3 janelas).`)
+  }
+
+  const handleToggleBenchPlayer = (playerId: string) => {
+    setBenchSelectionIds((current) => {
+      if (current.includes(playerId)) {
+        return current.filter((id) => id !== playerId)
+      }
+      if (current.length >= 7) {
+        setStatus('Banco cheio: escolha no maximo 7 atletas elegiveis.')
+        return current
+      }
+      return [...current, playerId]
+    })
+  }
+
+  const handleAutoLineup = () => {
+    const remaining = [...squad].sort((a, b) => computeOvr(b) - computeOvr(a))
+    const picked = new Set<string>()
+
+    const pickBest = (candidates: SquadRow[]) => {
+      if (candidates.length === 0) return null
+      const best = [...candidates].sort((a, b) => computeOvr(b) - computeOvr(a))[0]
+      picked.add(best.id)
+      return best
+    }
+
+    const nextSlots = FORMATION_SLOTS[formation].map((zone) => {
+      let chosen: SquadRow | null = null
+
+      if (zone === 'GOL') {
+        chosen = pickBest(remaining.filter((player) => !picked.has(player.id) && isGoalkeeperPosition(player.position)))
+      } else {
+        for (const line of OUTFIELD_FALLBACK[zone]) {
+          const candidates = remaining.filter((player) => {
+            if (picked.has(player.id) || isGoalkeeperPosition(player.position)) return false
+            return classifyOutfieldLine(player.position) === line
+          })
+          chosen = pickBest(candidates)
+          if (chosen) break
+        }
+
+        if (!chosen) {
+          chosen = pickBest(
+            remaining.filter((player) => !picked.has(player.id) && !isGoalkeeperPosition(player.position))
+          )
+        }
+      }
+
+      return { zone, playerId: chosen?.id ?? null }
+    })
+
+    const hasGoalkeeper = nextSlots.some((slot) => slot.zone === 'GOL' && slot.playerId !== null)
+    const starters = new Set(nextSlots.map((slot) => slot.playerId).filter((id): id is string => id !== null))
+    const reservePool = squad
+      .filter((player) => !starters.has(player.id))
+      .sort((a, b) => computeOvr(b) - computeOvr(a))
+
+    const reserveIds: string[] = []
+
+    const reserveGoalkeeper = reservePool.find((player) => isGoalkeeperPosition(player.position))
+    if (reserveGoalkeeper) {
+      reserveIds.push(reserveGoalkeeper.id)
+    }
+
+    const outfieldReserves = reservePool
+      .filter((player) => !isGoalkeeperPosition(player.position) && !reserveIds.includes(player.id))
+      .slice(0, 7 - reserveIds.length)
+      .map((player) => player.id)
+
+    reserveIds.push(...outfieldReserves)
+
+    if (reserveIds.length < 7) {
+      const remainingAny = reservePool
+        .filter((player) => !reserveIds.includes(player.id))
+        .slice(0, 7 - reserveIds.length)
+        .map((player) => player.id)
+      reserveIds.push(...remainingAny)
+    }
+
+    setSlots(nextSlots)
+    setSelectedSlotIdx(null)
+    setSubOutSlotIdx(null)
+    setSubInPlayerId('')
+    setBenchSelectionIds(reserveIds)
+
+    if (!hasGoalkeeper) {
+      setStatus(`Escalacao automatica aplicada (titulares + banco ${reserveIds.length}/7). Sem goleiro no elenco: preencha manualmente o slot GOL.`)
+      return
+    }
+
+    setStatus(`Escalacao automatica aplicada: titulares definidos e banco preenchido (${reserveIds.length}/7).`)
+  }
+
+  const handleClearLineup = () => {
+    setSlots(buildSlotsWithLineup(formation, []))
+    setSelectedSlotIdx(null)
+    setSubOutSlotIdx(null)
+    setSubInPlayerId('')
+    setBenchSelectionIds([])
+    setStatus('Elenco limpo. Titulares e banco foram esvaziados.')
+  }
+
+  const handleSaveLineup = async () => {
+    const titularIds = slots
+      .map((slot) => slot.playerId)
+      .filter((id): id is string => id !== null)
+
+    if (titularIds.length < 7) {
+      setStatus('Minimo de 7 jogadores. Adicione mais atletas antes de salvar.')
+      return
+    }
+
+    const golSlotFilled = slots.some((s) => s.zone === 'GOL' && s.playerId !== null)
+
+    if (!golSlotFilled) {
+      setStatus('O slot de goleiro precisa estar preenchido.')
+      return
+    }
+
+    setBusy(true)
+
+    try {
+      await saveLineup(titularIds)
+      setSavedSlots(slots.map((slot) => ({ ...slot })))
+      setIsDirty(false)
+      setStatus('Escalacao salva com sucesso.')
+    } catch (error) {
+      const msg =
+        typeof error === 'string'
+          ? error
+          : error instanceof Error
+          ? error.message
+          : JSON.stringify(error)
+      setStatus(msg)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleSimulateRound = async () => {
+    if (!snapshot) return
+
+    try {
+      setBusy(true)
+      const result = await simulateCareerRound(formation, playStyle)
+
+      setLiveMinute(0)
+      setLiveEvents([])
+      setBgEvents([])
+      setLiveHomeGoals(0)
+      setLiveAwayGoals(0)
+      setLiveState('idle')
+      setSubsUsed(0)
+      setSubWindowsUsed(0)
+      setSubsInCurrentPause(0)
+      setSubOutSlotIdx(null)
+      setSubInPlayerId('')
+      setRecentSubstitution(null)
+
+      pendingResult.current = result
+      const playerTeamId = result.snapshot.playerTeamId
+      const allBgGoals = result.matches
+        .filter(
+          (match) =>
+            match.homeTeamId !== playerTeamId &&
+            match.awayTeamId !== playerTeamId
+        )
+        .flatMap((match) => {
+          let homeGoals = 0
+          let awayGoals = 0
+
+          return [...match.events]
+            .filter((event) => event.eventType === 'goal')
+            .sort((a, b) => a.minute - b.minute)
+            .map((event) => {
+              if (event.teamSide === 'home') homeGoals += 1
+              if (event.teamSide === 'away') awayGoals += 1
+
+              return {
+                minute: event.minute,
+                homeTeamName: match.homeTeamName,
+                awayTeamName: match.awayTeamName,
+                homeGoals,
+                awayGoals,
+              }
+            })
+        })
+        .sort((a, b) => a.minute - b.minute)
+
+      setBgEvents(allBgGoals)
+      setPlayedRound(result.playedRound)
+
+      const playerMatch =
+        result.matches.find(
+          (match) =>
+            match.homeTeamId === result.snapshot.playerTeamId ||
+            match.awayTeamId === result.snapshot.playerTeamId
+        ) ?? null
+
+      setFocusMatch(playerMatch)
+
+      if (simSpeed === 'instantaneo' || !playerMatch) {
+        if (playerMatch) {
+          setLiveEvents(playerMatch.events)
+          setLiveHomeGoals(playerMatch.homeGoals)
+          setLiveAwayGoals(playerMatch.awayGoals)
+        }
+
+        setLiveMinute(90)
+        setSnapshot(result.snapshot)
+        setLastRoundMatches(result.matches)
+        setStatus(`Rodada ${result.playedRound} concluida.`)
+        setLiveState('done')
+        setBusy(false)
+        pendingResult.current = null
+        return
+      }
+
+      setStatus(`Rodada ${result.playedRound} em andamento...`)
+      setBusy(false)
+      setLiveState('running')
+    } catch (error) {
+      const msg =
+        typeof error === 'string'
+          ? error
+          : error instanceof Error
+          ? error.message
+          : JSON.stringify(error)
+      setStatus(msg)
+      setBusy(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!isDragging && !dragPayload) return
+
+    const trackPointer = (event: PointerEvent) => {
+      setDragCursor({ x: event.clientX, y: event.clientY })
+    }
+
+    const clearDrag = () => {
+      setIsDragging(false)
+      setDragPayload(null)
+      setDragCursor(null)
+    }
+
+    window.addEventListener('pointermove', trackPointer)
+    window.addEventListener('pointerup', clearDrag)
+    window.addEventListener('pointercancel', clearDrag)
+    return () => {
+      window.removeEventListener('pointermove', trackPointer)
+      window.removeEventListener('pointerup', clearDrag)
+      window.removeEventListener('pointercancel', clearDrag)
+    }
+  }, [isDragging, dragPayload])
+
+  useEffect(() => {
+    if (savedSlots.length === 0) {
+      setIsDirty(false)
+      return
+    }
+
+    if (slots.length !== savedSlots.length) {
+      setIsDirty(true)
+      return
+    }
+
+    const changed = slots.some(
+      (slot, idx) => slot.zone !== savedSlots[idx]?.zone || slot.playerId !== savedSlots[idx]?.playerId
+    )
+    setIsDirty(changed)
+  }, [slots, savedSlots])
+
+  const applyDrop = (targetIdx: number, fromIdx: number, fromPlayerId: string | null) => {
+    setSlots((curr) => {
+      const next = [...curr]
+      if (fromIdx >= 0 && fromIdx !== targetIdx) {
+        const temp = next[fromIdx].playerId
+        next[fromIdx] = { ...next[fromIdx], playerId: next[targetIdx].playerId }
+        next[targetIdx] = { ...next[targetIdx], playerId: temp }
+        return next
+      }
+      if (fromIdx === -1 && fromPlayerId) {
+        const existingIdx = next.findIndex((s) => s.playerId === fromPlayerId)
+        if (existingIdx !== -1) {
+          next[existingIdx] = {
+            ...next[existingIdx],
+            playerId: next[targetIdx].playerId,
+          }
+        }
+        next[targetIdx] = { ...next[targetIdx], playerId: fromPlayerId }
+      }
+      return next
+    })
+
+    justDroppedRef.current = true
+    setTimeout(() => {
+      justDroppedRef.current = false
+    }, 0)
+    setIsDragging(false)
+    setDragPayload(null)
+    setDragCursor(null)
+  }
+
+  const handleTabChange = (tabKey: TabKey) => {
+    if (activeTab === 'escalacao' && tabKey !== 'escalacao' && isDirty) {
+      const shouldLeave = window.confirm(
+        'Voce tem mudancas nao salvas no elenco. Deseja sair mesmo assim?'
+      )
+
+      if (!shouldLeave) return
+
+      setSlots(savedSlots.map((slot) => ({ ...slot })))
+      setSelectedSlotIdx(null)
+      setIsDirty(false)
+    }
+
+    setActiveTab(tabKey)
+  }
+
+  const isLiveRunning = liveState === 'running'
+  const isLivePaused = liveState === 'paused'
+  const hasLiveMatchOngoing = liveState === 'running' || liveState === 'paused'
+  const isHalftimePause = liveMinute >= 45 && liveMinute < 46
+  const substitutionLocked =
+    subsUsed >= 5 ||
+    (subWindowsUsed >= 3 && !isHalftimePause && subsInCurrentPause === 0)
+  const showLiveCard = focusMatch && (liveState === 'running' || liveState === 'paused' || liveState === 'done')
+  const playerTeamIsHome = focusMatch?.homeTeamId === snapshot?.playerTeamId
+  const currentResult = pendingResult.current
+  const reservePlayers = squad
+    .filter((player) => !slots.some((slot) => slot.playerId === player.id))
+    .sort((a, b) => computeOvr(b) - computeOvr(a))
+  const eligibleBenchPlayers = reservePlayers.filter((player) => benchSelectionIds.includes(player.id))
+
+  return (
+    <div className='min-h-svh bg-base-200 text-base-content'>
+      <div className='flex min-h-svh'>
+        <aside className='sticky top-0 h-svh w-[180px] shrink-0 border-r border-base-content/10 bg-base-300 px-3 py-6'>
+          <h1 className='mb-6 px-2 text-2xl font-bold'>Carreira</h1>
+
+          <nav className='flex flex-col gap-2'>
+            {MENU_ITEMS.map((item) => {
+              const tabKey = item.key
+              const isActive = tabKey !== null && activeTab === tabKey
+
+              return (
+                <button
+                  key={item.label}
+                  type='button'
+                  className={[
+                    'flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-left text-sm transition-colors',
+                    item.comingSoon
+                      ? 'cursor-not-allowed bg-base-200/50 opacity-45'
+                      : isActive
+                      ? 'bg-green-800 text-green-50'
+                      : 'bg-base-200/70 hover:bg-base-100',
+                  ].join(' ')}
+                  onClick={tabKey !== null ? () => handleTabChange(tabKey) : undefined}
+                  disabled={item.comingSoon}
+                >
+                  <span className='text-base leading-none'>{item.icon}</span>
+                  <span className='flex-1'>
+                    {item.label}
+                    {item.comingSoon ? ' (em breve)' : ''}
+                  </span>
+                </button>
+              )
+            })}
+          </nav>
+        </aside>
+
+        <main className='min-w-0 flex-1 p-6'>
+          <div className='mx-auto flex max-w-6xl flex-col gap-4'>
+            <p className='rounded-sm border border-base-content/20 bg-base-300 p-3 text-sm'>{status}</p>
+
+            {activeTab === 'partida' && (
+              <>
+                {/* Cabecalho: botao + velocidade */}
+                <div className='flex flex-wrap items-center gap-3'>
+                  <button
+                    type='button'
+                    className='btn btn-primary'
+                    onClick={() => void handleSimulateRound()}
+                    disabled={busy || !snapshot || snapshot.currentRound >= snapshot.totalRounds || hasLiveMatchOngoing}
+                  >
+                    â–¶ Iniciar Partida
+                  </button>
+                  <div className='flex items-center gap-1 ml-auto'>
+                    <span className='text-xs opacity-60 mr-1'>Vel:</span>
+                    {(['devagar', 'normal', 'rapido', 'instantaneo'] as SpeedKey[]).map((speed) => (
+                      <button
+                        key={speed}
+                        type='button'
+                        className={`btn btn-xs ${simSpeed === speed ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => setSimSpeed(speed)}
+                      >
+                        {SPEED_LABELS[speed]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Card da proxima partida */}
+                {snapshot && !hasLiveMatchOngoing && (() => {
+                  const nextMatch = snapshot.nextRoundFixtures.find(
+                    (f) => f.homeTeamId === snapshot.playerTeamId || f.awayTeamId === snapshot.playerTeamId
+                  )
+                  if (!nextMatch) return null
+                  const isHome = nextMatch.homeTeamId === snapshot.playerTeamId
+                  return (
+                    <div className='bg-base-100 border border-primary/30 rounded-lg p-5'>
+                      <div className='flex items-center justify-between mb-3'>
+                        <div>
+                          <span className='text-xs uppercase tracking-widest opacity-40'>Proxima partida</span>
+                          <div className='text-xs opacity-50 mt-0.5'>
+                            Rodada {snapshot.currentRound + 1}/{snapshot.totalRounds} Â· {snapshot.nextMatchDate}
+                          </div>
+                        </div>
+                        <div className='text-right'>
+                          <div className='text-xs opacity-40'>{isHome ? 'ðŸ  Mandante' : 'âœˆ Visitante'}</div>
+                          <div className='text-xs opacity-50 mt-0.5'>{nextMatch.homeStadium}</div>
+                        </div>
+                      </div>
+
+                      <div className='flex items-center justify-center gap-4'>
+                        <div className={`flex-1 text-right text-lg font-bold ${isHome ? 'text-primary' : ''}`}>
+                          {nextMatch.homeTeamName}
+                        </div>
+                        <div className='text-2xl font-mono opacity-30 px-2'>vs</div>
+                        <div className={`flex-1 text-lg font-bold ${!isHome ? 'text-primary' : ''}`}>
+                          {nextMatch.awayTeamName}
+                        </div>
+                      </div>
+
+                      <div className='mt-4 pt-3 border-t border-base-content/10 flex items-center justify-between text-xs opacity-50'>
+                        <span>ðŸ“Š {snapshot.playerPosition}Âº na classificacao</span>
+                        <span>{snapshot.leagueId}</span>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Card da partida ao vivo */}
+                {showLiveCard && focusMatch && (
+                  <div className='bg-base-100 border-2 border-primary/50 rounded-lg p-5'>
+                    <div className='flex items-center justify-between mb-4'>
+                      <span className='text-xs uppercase tracking-widest opacity-50'>
+                        {isLiveRunning ? 'Partida em andamento' : `Resultado - Rodada ${playedRound}`}
+                      </span>
+                      <div className='flex items-center gap-3'>
+                        {isLiveRunning && (
+                          <button type='button' className='btn btn-ghost btn-xs' onClick={pauseLive}>
+                            Pausar
+                          </button>
+                        )}
+                        {isLivePaused && (
+                          <button type='button' className='btn btn-ghost btn-xs' onClick={resumeLive}>
+                            Retomar
+                          </button>
+                        )}
+                        {hasLiveMatchOngoing && (
+                          <button type='button' className='btn btn-ghost btn-xs' onClick={skipLive}>
+                            Pular
+                          </button>
+                        )}
+                        <span className='font-mono text-3xl font-bold text-primary tabular-nums'>
+                          {String(liveMinute).padStart(2, '0')}&apos;
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className='flex items-center justify-center gap-6 mb-4'>
+                      <div className={`flex-1 text-right text-lg font-semibold leading-tight ${playerTeamIsHome ? 'text-primary' : ''}`}>
+                        {focusMatch.homeTeamName}
+                      </div>
+                      <div className='text-5xl font-mono font-bold text-primary min-w-[7rem] text-center tabular-nums'>
+                        {liveHomeGoals} - {liveAwayGoals}
+                      </div>
+                      <div className={`flex-1 text-lg font-semibold leading-tight ${playerTeamIsHome ? '' : 'text-primary'}`}>
+                        {focusMatch.awayTeamName}
+                      </div>
+                    </div>
+
+                    <div className='w-full bg-base-300 rounded-full h-2 mb-1'>
+                      <div
+                        className='bg-primary h-2 rounded-full transition-all duration-100'
+                        style={{ width: `${(liveMinute / 90) * 100}%` }}
+                      />
+                    </div>
+                    <div className='flex justify-between text-xs opacity-30 mb-4'>
+                      <span>0&apos;</span>
+                      <span>45&apos;</span>
+                      <span>90&apos;</span>
+                    </div>
+
+                    <div className='bg-base-200 rounded p-3 h-44 overflow-y-auto'>
+                      {liveEvents.length === 0 && (
+                        <p className='text-xs opacity-30 text-center mt-8'>Aguardando lances...</p>
+                      )}
+                      {[...liveEvents].reverse().map((event, index) => {
+                        const isHome = event.teamSide === 'home'
+                        const eventStyle = EVENT_STYLES[event.eventType] ?? {
+                          label: event.eventType,
+                          cls: 'bg-base-300 text-base-content',
+                        }
+                        return (
+                          <div
+                            key={`${event.minute}-${event.eventType}-${index}`}
+                            className={`flex items-center gap-2 py-0.5 text-sm font-mono ${isHome ? '' : 'flex-row-reverse'}`}
+                          >
+                            <span className='text-xs opacity-40 w-7 shrink-0 text-right'>{event.minute}&apos;</span>
+                            <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${eventStyle.cls}`}>
+                              {eventStyle.label}
+                            </span>
+                            <span className={event.eventType === 'goal' ? 'font-bold text-primary' : 'opacity-70'}>
+                              {event.teamName}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {isLiveRunning && bgEvents.length > 0 && (() => {
+                  const matchMap = new Map<string, {
+                    homeTeamName: string
+                    awayTeamName: string
+                    homeGoals: number
+                    awayGoals: number
+                    lastGoalMinute: number
+                    lastGoalTeam: string
+                  }>()
+
+                  bgEvents
+                    .filter((e) => e.minute <= liveMinute)
+                    .forEach((e) => {
+                      const key = `${e.homeTeamName}-${e.awayTeamName}`
+                      matchMap.set(key, {
+                        homeTeamName: e.homeTeamName,
+                        awayTeamName: e.awayTeamName,
+                        homeGoals: e.homeGoals,
+                        awayGoals: e.awayGoals,
+                        lastGoalMinute: e.minute,
+                        lastGoalTeam: e.homeGoals > (matchMap.get(key)?.homeGoals ?? 0)
+                          ? e.homeTeamName
+                          : e.awayTeamName,
+                      })
+                    })
+
+                  const allMatches = (currentResult?.matches ?? []).filter((match) => {
+                    if (!focusMatch) return true
+                    return !(
+                      match.homeTeamId === focusMatch.homeTeamId &&
+                      match.awayTeamId === focusMatch.awayTeamId
+                    )
+                  })
+
+                  return (
+                    <div className='bg-base-100 border border-base-content/10 rounded-lg p-3'>
+                      <div className='text-[10px] uppercase tracking-widest opacity-30 mb-2'>
+                        Outras partidas
+                      </div>
+                      <div className='space-y-1'>
+                        {allMatches.map((match) => {
+                          const key = `${match.homeTeamName}-${match.awayTeamName}`
+                          const live = matchMap.get(key)
+                          const homeGoals = live?.homeGoals ?? 0
+                          const awayGoals = live?.awayGoals ?? 0
+
+                          return (
+                            <div
+                              key={key}
+                              className='flex items-center justify-between text-xs gap-4'
+                            >
+                              <div className='flex items-center gap-2 min-w-0'>
+                                <span className='truncate opacity-70'>{match.homeTeamName}</span>
+                                <span className='font-mono font-bold tabular-nums shrink-0'>
+                                  {homeGoals} - {awayGoals}
+                                </span>
+                                <span className='truncate opacity-70'>{match.awayTeamName}</span>
+                              </div>
+                              {live && (
+                                <span className='shrink-0 text-[10px] opacity-50 whitespace-nowrap'>
+                                  âš½ {live.lastGoalTeam.split(' ')[0]} {live.lastGoalMinute}&apos;
+                                </span>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {isLivePaused && (
+                  <div className='bg-base-100 border border-base-content/20 rounded-sm p-4 space-y-3'>
+                    <div className='flex items-center justify-between'>
+                      <h3 className='text-sm font-semibold uppercase tracking-widest opacity-70'>
+                        Pausado: substituicoes
+                      </h3>
+                      <button type='button' className='btn btn-primary btn-xs' onClick={resumeLive}>
+                        Retomar partida
+                      </button>
+                    </div>
+
+                    <div className='text-xs opacity-65'>
+                      Regras FIFA: ate 5 atletas e no maximo 3 janelas.
+                      <span className='ml-2'>Usadas: {subsUsed}/5 atletas</span>
+                      <span className='ml-2'>{subWindowsUsed}/3 janelas</span>
+                      <span className='ml-2 opacity-70'>Intervalo nao conta janela.</span>
+                    </div>
+
+                    {recentSubstitution && (
+                      <div className='rounded border border-success/30 bg-success/10 px-3 py-2 text-xs'>
+                        <span className='font-semibold text-success'>Substituicao</span>
+                        <span className='ml-2 opacity-80'>
+                          {recentSubstitution.minute}&apos; Â· {recentSubstitution.zone} Â· Saiu {recentSubstitution.outPlayerName.split(' ')[0]} Â· Entrou {recentSubstitution.inPlayerName.split(' ')[0]}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className='grid grid-cols-1 gap-2 md:grid-cols-2'>
+                      <select
+                        className='select select-bordered w-full select-sm'
+                        value={formation}
+                        onChange={(event) => {
+                          const f = event.target.value as Formation
+                          setFormation(f)
+                          setSlots((current) => {
+                            const lineupIds = current
+                              .map((slot) => slot.playerId)
+                              .filter((id): id is string => id !== null)
+                            return buildSlotsWithLineup(f, lineupIds)
+                          })
+                          setSubOutSlotIdx(null)
+                        }}
+                        disabled={busy}
+                      >
+                        {FORMATIONS.map((item) => (
+                          <option key={item} value={item}>Formacao {item}</option>
+                        ))}
+                      </select>
+                      <select
+                        className='select select-bordered w-full select-sm'
+                        value={playStyle}
+                        onChange={(event) => setPlayStyle(event.target.value as PlayStyle)}
+                        disabled={busy}
+                      >
+                        {PLAY_STYLES.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className='grid grid-cols-1 gap-3 lg:grid-cols-[1.25fr_1fr]'>
+                      <div className='rounded-md border border-base-content/10 bg-base-200/60 p-3'>
+                        <div className='mb-2 text-[10px] uppercase tracking-widest opacity-45'>
+                          Mini escalacao em campo Â· clique para escolher quem sai
+                        </div>
+                        <div className='space-y-2'>
+                          {slotsByZone.map(({ zone, entries }) => (
+                            <div key={`pause-${zone}`} className='space-y-1'>
+                              <div className='text-[10px] uppercase tracking-wider opacity-40'>{zone}</div>
+                              <div className='flex flex-wrap gap-1.5'>
+                                {entries.map(({ slot, idx }) => {
+                                  const player = squad.find((p) => p.id === slot.playerId)
+                                  const isSelectedOut = subOutSlotIdx === idx
+                                  const isFlashing = recentSubstitution?.slotIdx === idx
+
+                                  return (
+                                    <button
+                                      key={`pause-slot-${idx}`}
+                                      type='button'
+                                      onClick={() => setSubOutSlotIdx(idx)}
+                                      disabled={busy || substitutionLocked || !slot.playerId}
+                                      className={[
+                                        'min-w-[5.25rem] rounded border px-2 py-1 text-left text-[11px] transition-colors',
+                                        !slot.playerId
+                                          ? 'border-base-content/10 bg-base-100/60 opacity-40'
+                                          : isSelectedOut
+                                          ? 'border-warning bg-warning/20 text-warning-content'
+                                          : 'border-base-content/20 bg-base-100 hover:border-primary/40',
+                                        isFlashing ? 'ring-2 ring-success/70' : '',
+                                      ].join(' ')}
+                                    >
+                                      <div className='flex items-center justify-between gap-2'>
+                                        <span className='font-semibold'>{slot.zone}</span>
+                                        {isSelectedOut && <span className='text-[10px] font-bold'>SAI</span>}
+                                        {isFlashing && !isSelectedOut && (
+                                          <span className='text-[10px] font-bold text-success'>TROCADO</span>
+                                        )}
+                                      </div>
+                                      <div className='truncate font-medium'>
+                                        {player ? player.name.split(' ')[0] : 'Vazio'}
+                                      </div>
+                                      <div className='opacity-60'>OVR {player ? computeOvr(player) : '--'}</div>
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className='rounded-md border border-base-content/10 bg-base-200/60 p-3'>
+                        <div className='mb-2 text-[10px] uppercase tracking-widest opacity-45'>
+                          Banco Â· clique para escolher quem entra
+                        </div>
+                        <div className='max-h-52 space-y-1 overflow-y-auto pr-1'>
+                          {eligibleBenchPlayers.map((player) => {
+                            const selected = subInPlayerId === player.id
+                            return (
+                              <button
+                                key={`pause-bench-${player.id}`}
+                                type='button'
+                                onClick={() => setSubInPlayerId(player.id)}
+                                disabled={busy || substitutionLocked}
+                                className={[
+                                  'flex w-full items-center justify-between rounded border px-2 py-1.5 text-xs transition-colors',
+                                  selected
+                                    ? 'border-primary/60 bg-primary/20'
+                                    : 'border-base-content/15 bg-base-100 hover:border-primary/40',
+                                ].join(' ')}
+                              >
+                                <span className='truncate text-left'>
+                                  {player.name} ({player.position})
+                                </span>
+                                <span className='ml-2 shrink-0 font-mono font-bold'>OVR {computeOvr(player)}</span>
+                              </button>
+                            )
+                          })}
+                          {eligibleBenchPlayers.length === 0 && (
+                            <p className='text-xs opacity-45'>Sem reservas elegiveis. Configure no menu Elenco.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className='flex flex-wrap items-center gap-2'>
+                      <button
+                        type='button'
+                        className='btn btn-primary btn-sm'
+                        onClick={handleInMatchSubstitution}
+                        disabled={busy || substitutionLocked || subOutSlotIdx === null || !subInPlayerId}
+                      >
+                        Confirmar substituicao
+                      </button>
+                      <button
+                        type='button'
+                        className='btn btn-ghost btn-sm'
+                        onClick={() => {
+                          setSubOutSlotIdx(null)
+                          setSubInPlayerId('')
+                        }}
+                        disabled={busy || (subOutSlotIdx === null && !subInPlayerId)}
+                      >
+                        Limpar selecao
+                      </button>
+
+                      <span className='text-xs opacity-60'>
+                        Sai: {subOutSlotIdx !== null ? `slot ${subOutSlotIdx + 1}` : '-'} Â· Entra:{' '}
+                        {subInPlayerId ? (squad.find((p) => p.id === subInPlayerId)?.name ?? '-') : '-'}
+                      </span>
+                    </div>
+
+                    <p className='text-[11px] opacity-55'>
+                      Apos o fim da partida, a escalaÃ§Ã£o volta para a que estava salva antes do jogo.
+                    </p>
+                  </div>
+                )}
+
+                {/* Resultados da rodada apos partida */}
+                {lastRoundMatches.length > 0 && !isLiveRunning && (
+                  <div className='bg-base-100 border border-base-content/20 rounded-sm p-4'>
+                    <h3 className='text-lg font-semibold mb-2'>Resultados da rodada {playedRound}</h3>
+                    <div className='space-y-1'>
+                      {lastRoundMatches.map((match) => {
+                        const isPlayerGame =
+                          match.homeTeamId === snapshot?.playerTeamId ||
+                          match.awayTeamId === snapshot?.playerTeamId
+                        return (
+                          <div
+                            key={`${match.homeTeamId}-${match.awayTeamId}`}
+                            className={`flex items-center px-3 py-1.5 rounded text-sm ${
+                              isPlayerGame ? 'bg-primary/15 border border-primary/40 font-semibold' : 'bg-base-200/50'
+                            }`}
+                          >
+                            <span className={`flex-1 text-right ${isPlayerGame ? 'text-primary' : ''}`}>
+                              {match.homeTeamName}
+                            </span>
+                            <span className='mx-4 font-mono tabular-nums'>
+                              {match.homeGoals} - {match.awayGoals}
+                            </span>
+                            <span className={`flex-1 ${isPlayerGame ? 'text-primary' : ''}`}>
+                              {match.awayTeamName}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'escalacao' && (
+              <div className='bg-base-100 border border-base-content/20 rounded-sm p-4'>
+                <div className='grid grid-cols-2 gap-3 mb-4'>
+                  <select
+                    className='select select-bordered w-full'
+                    value={formation}
+                    onChange={(event) => {
+                      const f = event.target.value as Formation
+                      setFormation(f)
+                      setSlots(buildSlotsWithLineup(f, []))
+                      setSelectedSlotIdx(null)
+                    }}
+                    disabled={busy}
+                  >
+                    {FORMATIONS.map((item) => (
+                      <option key={item} value={item}>Formacao {item}</option>
+                    ))}
+                  </select>
+                  <select
+                    className='select select-bordered w-full'
+                    value={playStyle}
+                    onChange={(event) => setPlayStyle(event.target.value as PlayStyle)}
+                    disabled={busy}
+                  >
+                    {PLAY_STYLES.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className='mb-4 flex flex-wrap items-center gap-2'>
+                  <button
+                    type='button'
+                    className='btn btn-primary btn-sm'
+                    onClick={handleAutoLineup}
+                    disabled={busy || squad.length === 0}
+                  >
+                    Escalacao automatica
+                  </button>
+                  <button
+                    type='button'
+                    className='btn btn-ghost btn-sm'
+                    onClick={handleClearLineup}
+                    disabled={busy}
+                  >
+                    Limpar escalacao
+                  </button>
+                </div>
+
+                <div className='flex items-center justify-between mb-3'>
+                  <h2 className='text-xl font-semibold'>Elenco</h2>
+                  <span className={`text-sm font-semibold ${
+                    titularesCount >= 11 ? 'text-success' : titularesCount >= 7 ? 'text-warning' : 'text-error'
+                  }`}>
+                    {titularesCount}/11
+                  </span>
+                </div>
+
+                <div className='flex flex-col lg:flex-row gap-4'>
+                  {/* Campo visual */}
+                  <div
+                    className={[
+                      'flex-1 bg-green-800 rounded-lg p-4 flex flex-col gap-3 transition-shadow',
+                      isDragging ? 'ring-2 ring-primary/60' : '',
+                    ].join(' ')}
+                  >
+                    {slotsByZone.map(({ zone, entries }, zoneIdx) => (
+                      <div
+                        key={zone}
+                        className={`flex flex-col gap-1.5 ${zoneIdx < slotsByZone.length - 1 ? 'border-b border-white/10 pb-3' : ''}`}
+                      >
+                        <span className='text-green-300/40 text-[10px] font-bold uppercase tracking-widest text-center'>
+                          {zone === 'ATA' ? 'Ataque' : zone === 'MEI' ? 'Meio-Campo' : zone === 'DEF' ? 'Defesa' : 'Goleiro'}
+                        </span>
+                        <div className='flex justify-center gap-2 flex-wrap'>
+                          {entries.map(({ slot, idx }) => {
+                            const player = squad.find((p) => p.id === slot.playerId)
+                            const isOpen = selectedSlotIdx === idx
+                            const isFilled = slot.playerId !== null
+                            const availablePlayers = squad.filter(
+                              (p) => !slots.some((s) => s.playerId === p.id) || p.id === slot.playerId
+                            )
+
+                            // Jogadores compatÃ­veis com a zona do slot primeiro, depois os demais - ambos por OVR
+                            const compatible = availablePlayers
+                              .filter((p) => isPositionInZone(slot.zone, p.position))
+                              .sort((a, b) => computeOvr(b) - computeOvr(a))
+                            const others = availablePlayers
+                              .filter((p) => !isPositionInZone(slot.zone, p.position))
+                              .sort((a, b) => computeOvr(b) - computeOvr(a))
+                            const sortedPlayers = [...compatible, ...others]
+
+                            const handleDrop = (e: React.DragEvent) => {
+                              e.preventDefault()
+                              const rawSlotIdx = e.dataTransfer.getData('slotIdx')
+                              const rawPlayerId = e.dataTransfer.getData('playerId')
+                              const plain = e.dataTransfer.getData('text/plain')
+
+                              let parsedIdx: number | null = null
+                              let parsedPlayerId: string | null = null
+
+                              if (plain) {
+                                try {
+                                  const payload = JSON.parse(plain) as {
+                                    slotIdx?: number
+                                    playerId?: string
+                                  }
+                                  if (typeof payload.slotIdx === 'number') {
+                                    parsedIdx = payload.slotIdx
+                                  }
+                                  if (typeof payload.playerId === 'string' && payload.playerId.trim()) {
+                                    parsedPlayerId = payload.playerId
+                                  }
+                                } catch {
+                                  if (plain.trim()) {
+                                    parsedPlayerId = plain
+                                  }
+                                }
+                              }
+
+                              const fromIdx = rawSlotIdx !== '' ? Number(rawSlotIdx) : (parsedIdx ?? -1)
+                              const fromPlayerId = rawPlayerId || parsedPlayerId || null
+                              applyDrop(idx, fromIdx, fromPlayerId)
+                            }
+
+                            return (
+                              <div
+                                key={idx}
+                                className='relative'
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={handleDrop}
+                                onPointerUp={(e) => {
+                                  if (!dragPayload) return
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  applyDrop(idx, dragPayload.slotIdx, dragPayload.playerId)
+                                }}
+                              >
+                                <button
+                                  type='button'
+                                  draggable={isFilled}
+                                  onPointerDown={(e) => {
+                                    if (!isFilled) return
+                                    setDragPayload({ slotIdx: idx, playerId: slot.playerId })
+                                    setIsDragging(true)
+                                    setDragCursor({ x: e.clientX, y: e.clientY })
+                                  }}
+                                  onDragStart={(e) => {
+                                    setIsDragging(true)
+                                    e.dataTransfer.effectAllowed = 'move'
+                                    e.dataTransfer.setData('slotIdx', String(idx))
+                                    e.dataTransfer.setData('playerId', slot.playerId ?? '')
+                                    e.dataTransfer.setData(
+                                      'text/plain',
+                                      JSON.stringify({ slotIdx: idx, playerId: slot.playerId ?? '' })
+                                    )
+                                  }}
+                                  onDragEnd={() => {
+                                    setIsDragging(false)
+                                    setDragPayload(null)
+                                    setDragCursor(null)
+                                  }}
+                                  onDragOver={(e) => e.preventDefault()}
+                                  onDrop={handleDrop}
+                                  onClick={() => {
+                                    if (justDroppedRef.current) return
+                                    setSelectedSlotIdx(isOpen ? null : idx)
+                                  }}
+                                  className={[
+                                    'rounded-md px-2 py-1.5 text-center w-[4.5rem] text-xs transition-all border-2',
+                                    isOpen
+                                      ? 'border-yellow-400 bg-yellow-400/20 text-yellow-100 shadow-lg shadow-yellow-400/20'
+                                      : isFilled
+                                      ? 'border-green-400/60 bg-green-900/70 text-green-100 hover:border-green-300'
+                                      : 'border-green-600/40 bg-green-900/20 text-green-500 border-dashed hover:border-green-500',
+                                  ].join(' ')}
+                                >
+                                  <div className='font-bold text-[9px] opacity-50 mb-0.5'>{zone}</div>
+                                  <div className='font-semibold truncate leading-tight'>
+                                    {player ? player.name.split(' ')[0] : 'Vazio'}
+                                  </div>
+                                  {player && (
+                                    <div className='font-mono text-[10px] opacity-60'>{computeOvr(player)}</div>
+                                  )}
+                                </button>
+
+                                {/* Dropdown do slot */}
+                                {isOpen && (
+                                  <div className='absolute z-50 top-full mt-1 left-1/2 -translate-x-1/2 w-44 bg-base-100 border border-base-content/20 rounded-lg shadow-xl overflow-hidden'>
+                                    <div className='px-2 py-1.5 text-[10px] uppercase tracking-widest opacity-40 border-b border-base-content/10'>
+                                      Slot {zone}
+                                    </div>
+                                    <div className='max-h-48 overflow-y-auto'>
+                                      {isFilled && (
+                                        <button
+                                          type='button'
+                                          className='w-full text-left px-3 py-1.5 text-xs hover:bg-error/20 text-error'
+                                          onClick={() => {
+                                            setSlots((curr) => curr.map((s, i) => i === idx ? { ...s, playerId: null } : s))
+                                            setSelectedSlotIdx(null)
+                                          }}
+                                        >
+                                          Remover jogador
+                                        </button>
+                                      )}
+                                      {sortedPlayers.length === 0 && (
+                                        <p className='px-3 py-2 text-xs opacity-40'>Nenhum disponivel</p>
+                                      )}
+                                      {compatible.length > 0 && (
+                                        <div className='px-2 py-1 text-[10px] opacity-30 uppercase tracking-widest'>
+                                          Posicao ideal
+                                        </div>
+                                      )}
+                                      {compatible.map((p) => (
+                                        <button
+                                          key={p.id}
+                                          type='button'
+                                          className='w-full text-left px-3 py-1.5 text-xs hover:bg-primary/20 flex items-center justify-between gap-2'
+                                          onClick={() => {
+                                            setSlots((curr) => {
+                                              const next = [...curr]
+                                              const existingIdx = next.findIndex((s) => s.playerId === p.id)
+                                              if (existingIdx !== -1) {
+                                                next[existingIdx] = { ...next[existingIdx], playerId: next[idx].playerId }
+                                              }
+                                              next[idx] = { ...next[idx], playerId: p.id }
+                                              return next
+                                            })
+                                            setSelectedSlotIdx(null)
+                                          }}
+                                        >
+                                          <div className='min-w-0'>
+                                            <div className='font-semibold truncate'>{p.name}</div>
+                                            <div className='opacity-40'>{p.position}</div>
+                                          </div>
+                                          <span className='font-mono font-bold shrink-0'>{computeOvr(p)}</span>
+                                        </button>
+                                      ))}
+                                      {others.length > 0 && compatible.length > 0 && (
+                                        <div className='px-2 py-1 text-[10px] opacity-30 uppercase tracking-widest border-t border-base-content/10'>
+                                          Outros
+                                        </div>
+                                      )}
+                                      {others.map((p) => (
+                                        <button
+                                          key={p.id}
+                                          type='button'
+                                          className='w-full text-left px-3 py-1.5 text-xs hover:bg-base-300 flex items-center justify-between gap-2 opacity-60'
+                                          onClick={() => {
+                                            setSlots((curr) => {
+                                              const next = [...curr]
+                                              const existingIdx = next.findIndex((s) => s.playerId === p.id)
+                                              if (existingIdx !== -1) {
+                                                next[existingIdx] = {
+                                                  ...next[existingIdx],
+                                                  playerId: next[idx].playerId,
+                                                }
+                                              }
+                                              next[idx] = { ...next[idx], playerId: p.id }
+                                              return next
+                                            })
+                                            setSelectedSlotIdx(null)
+                                          }}
+                                        >
+                                          <div className='min-w-0'>
+                                            <div className='font-semibold truncate'>{p.name}</div>
+                                            <div className='opacity-40'>{p.position}</div>
+                                          </div>
+                                          <span className='font-mono font-bold shrink-0'>{computeOvr(p)}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Lista de jogadores - drag source */}
+                  <div className='w-full lg:w-52 flex-shrink-0 flex flex-col gap-2'>
+                    <p className='text-xs opacity-50'>Arraste para um slot ou clique no slot para abrir opcoes</p>
+                    <div className='overflow-y-auto max-h-96 space-y-0.5 pr-1'>
+                      {squad.map((player) => {
+                        const isAssigned = slots.some((s) => s.playerId === player.id)
+                        return (
+                          <div
+                            key={player.id}
+                            draggable
+                            onPointerDown={(e) => {
+                              e.preventDefault()
+                              setDragPayload({ slotIdx: -1, playerId: player.id })
+                              setIsDragging(true)
+                              setDragCursor({ x: e.clientX, y: e.clientY })
+                            }}
+                            onDragStart={(e) => {
+                              setIsDragging(true)
+                              e.dataTransfer.effectAllowed = 'move'
+                              e.dataTransfer.setData('playerId', player.id)
+                              e.dataTransfer.setData('slotIdx', '-1')
+                              e.dataTransfer.setData(
+                                'text/plain',
+                                JSON.stringify({ slotIdx: -1, playerId: player.id })
+                              )
+                            }}
+                            onDragEnd={() => {
+                              setIsDragging(false)
+                              setDragPayload(null)
+                              setDragCursor(null)
+                            }}
+                            className={[
+                              'rounded px-2 py-1.5 text-xs flex items-center justify-between gap-1 cursor-grab transition-colors select-none',
+                              isAssigned ? 'opacity-40' : 'hover:bg-primary/20',
+                            ].join(' ')}
+                          >
+                            <div className='min-w-0'>
+                              <span className='font-semibold truncate block'>{player.name}</span>
+                              <span className='opacity-50'>{player.position}</span>
+                            </div>
+                            <span className='font-mono font-bold shrink-0'>{computeOvr(player)}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className='mt-4 rounded-md border border-base-content/15 bg-base-200/50 p-3'>
+                  <div className='mb-2 flex items-center justify-between'>
+                    <h3 className='text-sm font-semibold uppercase tracking-widest opacity-70'>
+                      Banco de reservas elegivel
+                    </h3>
+                    <span className='text-xs opacity-60'>{benchSelectionIds.length}/7</span>
+                  </div>
+                  <p className='mb-3 text-xs opacity-60'>
+                    Selecione ate 7 atletas que poderao entrar nas substituicoes durante a partida.
+                  </p>
+
+                  <div className='grid grid-cols-1 gap-1.5 md:grid-cols-2'>
+                    {reservePlayers.map((player) => {
+                      const selected = benchSelectionIds.includes(player.id)
+                      return (
+                        <button
+                          key={`bench-select-${player.id}`}
+                          type='button'
+                          onClick={() => handleToggleBenchPlayer(player.id)}
+                          className={[
+                            'flex items-center justify-between rounded border px-2 py-1.5 text-xs transition-colors',
+                            selected
+                              ? 'border-primary/60 bg-primary/20'
+                              : 'border-base-content/15 bg-base-100 hover:border-primary/40',
+                          ].join(' ')}
+                        >
+                          <span className='truncate text-left'>
+                            {player.name} ({player.position})
+                          </span>
+                          <span className='ml-2 shrink-0 font-mono font-bold'>OVR {computeOvr(player)}</span>
+                        </button>
+                      )
+                    })}
+                    {reservePlayers.length === 0 && (
+                      <p className='text-xs opacity-50'>Sem reservas disponiveis no momento.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Fechar dropdown ao clicar fora */}
+                {selectedSlotIdx !== null && (
+                  <div
+                    className='fixed inset-0 z-40'
+                    onClick={() => setSelectedSlotIdx(null)}
+                  />
+                )}
+
+                <div className='mt-4 flex items-center gap-3'>
+                  <button
+                    type='button'
+                    className='btn btn-primary btn-sm'
+                    onClick={() => void handleSaveLineup()}
+                    disabled={busy || titularesCount < 7}
+                  >
+                    Salvar Elenco
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {isDragging && dragPayload && dragCursor && dragPreviewPlayer && (
+              <div
+                className='pointer-events-none fixed z-[60]'
+                style={{ left: dragCursor.x + 14, top: dragCursor.y + 14 }}
+              >
+                <div className='rounded-md border border-primary/50 bg-base-100/95 px-2 py-1 shadow-xl backdrop-blur'>
+                  <div className='text-[11px] font-semibold leading-tight'>{dragPreviewPlayer.name}</div>
+                  <div className='text-[10px] opacity-60'>
+                    {dragPreviewPlayer.position} â€¢ OVR {computeOvr(dragPreviewPlayer)}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+export default Career

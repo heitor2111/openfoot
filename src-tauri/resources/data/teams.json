@@ -1,0 +1,2008 @@
+{
+  "Teams": [
+    {
+      "Id": "athletico-pr",
+      "Name": "Athletico-PR",
+      "Country": "Brazil",
+      "State": "PR",
+      "Shield": "PR",
+      "LeagueId": "bra-serie-a",
+      "Tier": 3,
+      "Coach": {
+        "Id": "athletico-pr-coach",
+        "Name": "Fernando Silva",
+        "Overall": 69,
+        "Experience": 36,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Athletico-PR"
+    },
+    {
+      "Id": "atletico-mg",
+      "Name": "Atlético-MG",
+      "Country": "Brazil",
+      "State": "MG",
+      "Shield": "MG",
+      "LeagueId": "bra-serie-a",
+      "Tier": 2,
+      "Coach": {
+        "Id": "atletico-mg-coach",
+        "Name": "Miguel Souza",
+        "Overall": 67,
+        "Experience": 10,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Atlético-MG"
+    },
+    {
+      "Id": "bahia",
+      "Name": "Bahia",
+      "Country": "Brazil",
+      "State": "BA",
+      "Shield": "BA",
+      "LeagueId": "bra-serie-a",
+      "Tier": 3,
+      "Coach": {
+        "Id": "bahia-coach",
+        "Name": "Paulo Santos",
+        "Overall": 80,
+        "Experience": 18,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Bahia"
+    },
+    {
+      "Id": "botafogo",
+      "Name": "Botafogo",
+      "Country": "Brazil",
+      "State": "RJ",
+      "Shield": "RJ",
+      "LeagueId": "bra-serie-a",
+      "Tier": 2,
+      "Coach": {
+        "Id": "botafogo-coach",
+        "Name": "Afonso Costa",
+        "Overall": 66,
+        "Experience": 10,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Botafogo"
+    },
+    {
+      "Id": "ceara",
+      "Name": "Ceará",
+      "Country": "Brazil",
+      "State": "CE",
+      "Shield": "CE",
+      "LeagueId": "bra-serie-a",
+      "Tier": 4,
+      "Coach": {
+        "Id": "ceara-coach",
+        "Name": "Luis Machado",
+        "Overall": 69,
+        "Experience": 19,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Ceará"
+    },
+    {
+      "Id": "corinthians",
+      "Name": "Corinthians",
+      "Country": "Brazil",
+      "State": "SP",
+      "Shield": "SP",
+      "LeagueId": "bra-serie-a",
+      "Tier": 2,
+      "Coach": {
+        "Id": "corinthians-coach",
+        "Name": "Miguel Machado",
+        "Overall": 76,
+        "Experience": 35,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Corinthians"
+    },
+    {
+      "Id": "criciuma",
+      "Name": "Criciúma",
+      "Country": "Brazil",
+      "State": "SC",
+      "Shield": "SC",
+      "LeagueId": "bra-serie-a",
+      "Tier": 4,
+      "Coach": {
+        "Id": "criciuma-coach",
+        "Name": "Fernando Santos",
+        "Overall": 89,
+        "Experience": 16,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Criciúma"
+    },
+    {
+      "Id": "cruzeiro",
+      "Name": "Cruzeiro",
+      "Country": "Brazil",
+      "State": "MG",
+      "Shield": "MG",
+      "LeagueId": "bra-serie-a",
+      "Tier": 2,
+      "Coach": {
+        "Id": "cruzeiro-coach",
+        "Name": "Luis Silva",
+        "Overall": 87,
+        "Experience": 24,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Cruzeiro"
+    },
+    {
+      "Id": "cuiaba",
+      "Name": "Cuiabá",
+      "Country": "Brazil",
+      "State": "MT",
+      "Shield": "MT",
+      "LeagueId": "bra-serie-a",
+      "Tier": 4,
+      "Coach": {
+        "Id": "cuiaba-coach",
+        "Name": "Antonio Nunes",
+        "Overall": 91,
+        "Experience": 15,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Cuiabá"
+    },
+    {
+      "Id": "flamengo",
+      "Name": "Flamengo",
+      "Country": "Brazil",
+      "State": "RJ",
+      "Shield": "RJ",
+      "LeagueId": "bra-serie-a",
+      "Tier": 1,
+      "Coach": {
+        "Id": "flamengo-coach",
+        "Name": "Antonio Oliveira",
+        "Overall": 68,
+        "Experience": 35,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Flamengo"
+    },
+    {
+      "Id": "fluminense",
+      "Name": "Fluminense",
+      "Country": "Brazil",
+      "State": "RJ",
+      "Shield": "RJ",
+      "LeagueId": "bra-serie-a",
+      "Tier": 2,
+      "Coach": {
+        "Id": "fluminense-coach",
+        "Name": "Carlos Oliveira",
+        "Overall": 70,
+        "Experience": 20,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Fluminense"
+    },
+    {
+      "Id": "fortaleza",
+      "Name": "Fortaleza",
+      "Country": "Brazil",
+      "State": "CE",
+      "Shield": "CE",
+      "LeagueId": "bra-serie-a",
+      "Tier": 4,
+      "Coach": {
+        "Id": "fortaleza-coach",
+        "Name": "Jorge Gomes",
+        "Overall": 73,
+        "Experience": 18,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Fortaleza"
+    },
+    {
+      "Id": "gremio",
+      "Name": "Grêmio",
+      "Country": "Brazil",
+      "State": "RS",
+      "Shield": "RS",
+      "LeagueId": "bra-serie-a",
+      "Tier": 2,
+      "Coach": {
+        "Id": "gremio-coach",
+        "Name": "Carlos Souza",
+        "Overall": 83,
+        "Experience": 37,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Grêmio"
+    },
+    {
+      "Id": "internacional",
+      "Name": "Internacional",
+      "Country": "Brazil",
+      "State": "RS",
+      "Shield": "RS",
+      "LeagueId": "bra-serie-a",
+      "Tier": 2,
+      "Coach": {
+        "Id": "internacional-coach",
+        "Name": "Afonso Ferreira",
+        "Overall": 66,
+        "Experience": 20,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Internacional"
+    },
+    {
+      "Id": "juventude",
+      "Name": "Juventude",
+      "Country": "Brazil",
+      "State": "RS",
+      "Shield": "RS",
+      "LeagueId": "bra-serie-a",
+      "Tier": 4,
+      "Coach": {
+        "Id": "juventude-coach",
+        "Name": "José Silva",
+        "Overall": 84,
+        "Experience": 23,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Juventude"
+    },
+    {
+      "Id": "palmeiras",
+      "Name": "Palmeiras",
+      "Country": "Brazil",
+      "State": "SP",
+      "Shield": "SP",
+      "LeagueId": "bra-serie-a",
+      "Tier": 1,
+      "Coach": {
+        "Id": "palmeiras-coach",
+        "Name": "José Barbosa",
+        "Overall": 87,
+        "Experience": 33,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Palmeiras"
+    },
+    {
+      "Id": "red-bull-bragantino",
+      "Name": "Red Bull Bragantino",
+      "Country": "Brazil",
+      "State": "SP",
+      "Shield": "SP",
+      "LeagueId": "bra-serie-a",
+      "Tier": 4,
+      "Coach": {
+        "Id": "red-bull-bragantino-coach",
+        "Name": "Manuel Costa",
+        "Overall": 70,
+        "Experience": 32,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Red Bull Bragantino"
+    },
+    {
+      "Id": "sao-paulo",
+      "Name": "São Paulo",
+      "Country": "Brazil",
+      "State": "SP",
+      "Shield": "SP",
+      "LeagueId": "bra-serie-a",
+      "Tier": 2,
+      "Coach": {
+        "Id": "sao-paulo-coach",
+        "Name": "Antonio Machado",
+        "Overall": 76,
+        "Experience": 25,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do São Paulo"
+    },
+    {
+      "Id": "vasco",
+      "Name": "Vasco",
+      "Country": "Brazil",
+      "State": "RJ",
+      "Shield": "RJ",
+      "LeagueId": "bra-serie-a",
+      "Tier": 2,
+      "Coach": {
+        "Id": "vasco-coach",
+        "Name": "Jorge Martins",
+        "Overall": 73,
+        "Experience": 33,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Vasco"
+    },
+    {
+      "Id": "vitoria",
+      "Name": "Vitória",
+      "Country": "Brazil",
+      "State": "BA",
+      "Shield": "BA",
+      "LeagueId": "bra-serie-a",
+      "Tier": 3,
+      "Coach": {
+        "Id": "vitoria-coach",
+        "Name": "Ricardo Dias",
+        "Overall": 82,
+        "Experience": 21,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Vitória"
+    },
+    {
+      "Id": "america-mg",
+      "Name": "América-MG",
+      "Country": "Brazil",
+      "State": "",
+      "Shield": "AMÃÂR",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "america-mg-coach",
+        "Name": "Miguel Dias",
+        "Overall": 87,
+        "Experience": 11,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do América-MG"
+    },
+    {
+      "Id": "atletico-go",
+      "Name": "Atlético-GO",
+      "Country": "Brazil",
+      "State": "",
+      "Shield": "ATLÃÂ",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "atletico-go-coach",
+        "Name": "Carlos Ferreira",
+        "Overall": 80,
+        "Experience": 40,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Atlético-GO"
+    },
+    {
+      "Id": "goias",
+      "Name": "Goiás",
+      "Country": "Brazil",
+      "State": "",
+      "Shield": "GOIÃÂ",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "goias-coach",
+        "Name": "Afonso Oliveira",
+        "Overall": 80,
+        "Experience": 15,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Goiás"
+    },
+    {
+      "Id": "santos",
+      "Name": "Santos",
+      "Country": "Brazil",
+      "State": "",
+      "Shield": "SANT",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "santos-coach",
+        "Name": "José Dias",
+        "Overall": 86,
+        "Experience": 10,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Santos"
+    },
+    {
+      "Id": "avai",
+      "Name": "Avaí",
+      "Country": "Brazil",
+      "State": "SC",
+      "Shield": "SC",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "avai-coach",
+        "Name": "Fernando Martins",
+        "Overall": 92,
+        "Experience": 27,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Avaí"
+    },
+    {
+      "Id": "cebolinha",
+      "Name": "Cebolinha",
+      "Country": "Brazil",
+      "State": "PR",
+      "Shield": "PR",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "cebolinha-coach",
+        "Name": "Antonio Alves",
+        "Overall": 77,
+        "Experience": 19,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Cebolinha"
+    },
+    {
+      "Id": "novorizontino",
+      "Name": "Novorizontino",
+      "Country": "Brazil",
+      "State": "SP",
+      "Shield": "SP",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "novorizontino-coach",
+        "Name": "Afonso Martins",
+        "Overall": 78,
+        "Experience": 29,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Novorizontino"
+    },
+    {
+      "Id": "vila-nova",
+      "Name": "Vila Nova",
+      "Country": "Brazil",
+      "State": "GO",
+      "Shield": "GO",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "vila-nova-coach",
+        "Name": "Fernando Ferreira",
+        "Overall": 75,
+        "Experience": 12,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Vila Nova"
+    },
+    {
+      "Id": "ponte-preta",
+      "Name": "Ponte Preta",
+      "Country": "Brazil",
+      "State": "SP",
+      "Shield": "SP",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "ponte-preta-coach",
+        "Name": "Luis Silva",
+        "Overall": 83,
+        "Experience": 19,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Ponte Preta"
+    },
+    {
+      "Id": "abc",
+      "Name": "ABC",
+      "Country": "Brazil",
+      "State": "RN",
+      "Shield": "RN",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "abc-coach",
+        "Name": "Antonio Souza",
+        "Overall": 67,
+        "Experience": 38,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do ABC"
+    },
+    {
+      "Id": "mirassol",
+      "Name": "Mirassol",
+      "Country": "Brazil",
+      "State": "SP",
+      "Shield": "SP",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "mirassol-coach",
+        "Name": "Afonso Souza",
+        "Overall": 89,
+        "Experience": 40,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Mirassol"
+    },
+    {
+      "Id": "nautico",
+      "Name": "Náutico",
+      "Country": "Brazil",
+      "State": "PE",
+      "Shield": "PE",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "nautico-coach",
+        "Name": "Antonio Nunes",
+        "Overall": 87,
+        "Experience": 19,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Náutico"
+    },
+    {
+      "Id": "paysandu",
+      "Name": "Paysandu",
+      "Country": "Brazil",
+      "State": "PA",
+      "Shield": "PA",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "paysandu-coach",
+        "Name": "Luis Nunes",
+        "Overall": 66,
+        "Experience": 21,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Paysandu"
+    },
+    {
+      "Id": "crb",
+      "Name": "CRB",
+      "Country": "Brazil",
+      "State": "AL",
+      "Shield": "AL",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "crb-coach",
+        "Name": "Jorge Costa",
+        "Overall": 88,
+        "Experience": 23,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do CRB"
+    },
+    {
+      "Id": "botafogo-rp",
+      "Name": "Botafogo de Ribeirão Preto",
+      "Country": "Brazil",
+      "State": "SP",
+      "Shield": "SP",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "botafogo-rp-coach",
+        "Name": "Jorge Rocha",
+        "Overall": 92,
+        "Experience": 27,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Botafogo de Ribeirão Preto"
+    },
+    {
+      "Id": "operario",
+      "Name": "Operário",
+      "Country": "Brazil",
+      "State": "PR",
+      "Shield": "PR",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "operario-coach",
+        "Name": "Ricardo Souza",
+        "Overall": 75,
+        "Experience": 17,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Operário"
+    },
+    {
+      "Id": "sampaio-correa",
+      "Name": "Sampaio Corrêa",
+      "Country": "Brazil",
+      "State": "MA",
+      "Shield": "MA",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "sampaio-correa-coach",
+        "Name": "Ricardo Dias",
+        "Overall": 81,
+        "Experience": 17,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Sampaio Corrêa"
+    },
+    {
+      "Id": "guarani",
+      "Name": "Guarani",
+      "Country": "Brazil",
+      "State": "SP",
+      "Shield": "SP",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "guarani-coach",
+        "Name": "Carlos Gomes",
+        "Overall": 74,
+        "Experience": 18,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Guarani"
+    },
+    {
+      "Id": "amazonas",
+      "Name": "Amazonas",
+      "Country": "Brazil",
+      "State": "AM",
+      "Shield": "AM",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "amazonas-coach",
+        "Name": "Afonso Oliveira",
+        "Overall": 90,
+        "Experience": 14,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Amazonas"
+    },
+    {
+      "Id": "santa-cruz",
+      "Name": "Santa Cruz",
+      "Country": "Brazil",
+      "State": "PE",
+      "Shield": "PE",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "santa-cruz-coach",
+        "Name": "Tiago Souza",
+        "Overall": 84,
+        "Experience": 24,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Santa Cruz"
+    },
+    {
+      "Id": "chapecoense-b",
+      "Name": "Chapecoense",
+      "Country": "Brazil",
+      "State": "SC",
+      "Shield": "SC",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "chapecoense-b-coach",
+        "Name": "Afonso Martins",
+        "Overall": 90,
+        "Experience": 15,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Chapecoense"
+    },
+    {
+      "Id": "ituano",
+      "Name": "Ituano",
+      "Country": "Brazil",
+      "State": "SP",
+      "Shield": "SP",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "ituano-coach",
+        "Name": "Luis Costa",
+        "Overall": 73,
+        "Experience": 30,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Ituano"
+    },
+    {
+      "Id": "jacuipense",
+      "Name": "Jacuipense",
+      "Country": "Brazil",
+      "State": "BA",
+      "Shield": "BA",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "jacuipense-coach",
+        "Name": "Ricardo Costa",
+        "Overall": 87,
+        "Experience": 34,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Jacuipense"
+    },
+    {
+      "Id": "tombense",
+      "Name": "Tombense",
+      "Country": "Brazil",
+      "State": "MG",
+      "Shield": "MG",
+      "LeagueId": "bra-serie-b",
+      "Coach": {
+        "Id": "tombense-coach",
+        "Name": "Ricardo Barbosa",
+        "Overall": 88,
+        "Experience": 31,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Tombense"
+    },
+    {
+      "Id": "real-madrid",
+      "Name": "Real Madrid",
+      "Country": "Spain",
+      "State": "Madrid",
+      "Shield": "Madrid",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "real-madrid-coach",
+        "Name": "Luis Machado",
+        "Overall": 73,
+        "Experience": 25,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Real Madrid"
+    },
+    {
+      "Id": "barcelona",
+      "Name": "Barcelona",
+      "Country": "Spain",
+      "State": "CataluÃÂ±a",
+      "Shield": "CataluÃÂ±a",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "barcelona-coach",
+        "Name": "Luis Barbosa",
+        "Overall": 67,
+        "Experience": 13,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Barcelona"
+    },
+    {
+      "Id": "atletico-madrid",
+      "Name": "Atlético Madrid",
+      "Country": "Spain",
+      "State": "Madrid",
+      "Shield": "Madrid",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "atletico-madrid-coach",
+        "Name": "Miguel Costa",
+        "Overall": 65,
+        "Experience": 25,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Atlético Madrid"
+    },
+    {
+      "Id": "sevilla",
+      "Name": "Sevilla",
+      "Country": "Spain",
+      "State": "Andalucía",
+      "Shield": "Andalucía",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "sevilla-coach",
+        "Name": "Roberto Gomes",
+        "Overall": 83,
+        "Experience": 32,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Sevilla"
+    },
+    {
+      "Id": "real-sociedad",
+      "Name": "Real Sociedad",
+      "Country": "Spain",
+      "State": "País Vasco",
+      "Shield": "País Vasco",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "real-sociedad-coach",
+        "Name": "Carlos Barbosa",
+        "Overall": 87,
+        "Experience": 26,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Real Sociedad"
+    },
+    {
+      "Id": "villarreal",
+      "Name": "Villarreal",
+      "Country": "Spain",
+      "State": "Valenciana",
+      "Shield": "Valenciana",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "villarreal-coach",
+        "Name": "Paulo Machado",
+        "Overall": 79,
+        "Experience": 10,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Villarreal"
+    },
+    {
+      "Id": "athletic-bilbao",
+      "Name": "Athletic Bilbao",
+      "Country": "Spain",
+      "State": "País Vasco",
+      "Shield": "País Vasco",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "athletic-bilbao-coach",
+        "Name": "Diego Ferreira",
+        "Overall": 90,
+        "Experience": 25,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Athletic Bilbao"
+    },
+    {
+      "Id": "valencia",
+      "Name": "Valencia",
+      "Country": "Spain",
+      "State": "Valenciana",
+      "Shield": "Valenciana",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "valencia-coach",
+        "Name": "Paulo Machado",
+        "Overall": 73,
+        "Experience": 25,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Valencia"
+    },
+    {
+      "Id": "la-real",
+      "Name": "La Real",
+      "Country": "Spain",
+      "State": "País Vasco",
+      "Shield": "País Vasco",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "la-real-coach",
+        "Name": "Paulo Oliveira",
+        "Overall": 66,
+        "Experience": 14,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do La Real"
+    },
+    {
+      "Id": "real-betis",
+      "Name": "Real Betis",
+      "Country": "Spain",
+      "State": "Andalucía",
+      "Shield": "Andalucía",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "real-betis-coach",
+        "Name": "Miguel Silva",
+        "Overall": 82,
+        "Experience": 14,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Real Betis"
+    },
+    {
+      "Id": "getafe",
+      "Name": "Getafe",
+      "Country": "Spain",
+      "State": "Madrid",
+      "Shield": "Madrid",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "getafe-coach",
+        "Name": "Manuel Rocha",
+        "Overall": 91,
+        "Experience": 31,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Getafe"
+    },
+    {
+      "Id": "rayo-vallecano",
+      "Name": "Rayo Vallecano",
+      "Country": "Spain",
+      "State": "Madrid",
+      "Shield": "Madrid",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "rayo-vallecano-coach",
+        "Name": "Jorge Rocha",
+        "Overall": 90,
+        "Experience": 34,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Rayo Vallecano"
+    },
+    {
+      "Id": "mallorca",
+      "Name": "Mallorca",
+      "Country": "Spain",
+      "State": "Baleares",
+      "Shield": "Baleares",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "mallorca-coach",
+        "Name": "Afonso Costa",
+        "Overall": 85,
+        "Experience": 31,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Mallorca"
+    },
+    {
+      "Id": "real-valladolid",
+      "Name": "Real Valladolid",
+      "Country": "Spain",
+      "State": "Castilla y León",
+      "Shield": "Castilla y León",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "real-valladolid-coach",
+        "Name": "José Dias",
+        "Overall": 65,
+        "Experience": 33,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Real Valladolid"
+    },
+    {
+      "Id": "osasuna",
+      "Name": "Osasuna",
+      "Country": "Spain",
+      "State": "Navarra",
+      "Shield": "Navarra",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "osasuna-coach",
+        "Name": "Diego Monteiro",
+        "Overall": 65,
+        "Experience": 24,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Osasuna"
+    },
+    {
+      "Id": "girona",
+      "Name": "Girona",
+      "Country": "Spain",
+      "State": "CataluÃÂ±a",
+      "Shield": "CataluÃÂ±a",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "girona-coach",
+        "Name": "Afonso Oliveira",
+        "Overall": 72,
+        "Experience": 39,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Girona"
+    },
+    {
+      "Id": "celta-vigo",
+      "Name": "Celta Vigo",
+      "Country": "Spain",
+      "State": "Galicia",
+      "Shield": "Galicia",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "celta-vigo-coach",
+        "Name": "Luis Nunes",
+        "Overall": 90,
+        "Experience": 23,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Celta Vigo"
+    },
+    {
+      "Id": "alaves",
+      "Name": "Alavés",
+      "Country": "Spain",
+      "State": "País Vasco",
+      "Shield": "País Vasco",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "alaves-coach",
+        "Name": "Manuel Barbosa",
+        "Overall": 76,
+        "Experience": 12,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Alavés"
+    },
+    {
+      "Id": "las-palmas",
+      "Name": "Las Palmas",
+      "Country": "Spain",
+      "State": "Canarias",
+      "Shield": "Canarias",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "las-palmas-coach",
+        "Name": "Antonio Rocha",
+        "Overall": 70,
+        "Experience": 14,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Las Palmas"
+    },
+    {
+      "Id": "espanyol",
+      "Name": "RCD Espanyol",
+      "Country": "Spain",
+      "State": "CataluÃÂ±a",
+      "Shield": "CataluÃÂ±a",
+      "LeagueId": "esp-la-liga",
+      "Coach": {
+        "Id": "espanyol-coach",
+        "Name": "Manuel Souza",
+        "Overall": 69,
+        "Experience": 32,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do RCD Espanyol"
+    },
+    {
+      "Id": "sporting-gijon",
+      "Name": "Sporting Gijón",
+      "Country": "Spain",
+      "State": "Asturias",
+      "Shield": "Asturias",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "sporting-gijon-coach",
+        "Name": "Luis Souza",
+        "Overall": 73,
+        "Experience": 12,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Sporting Gijón"
+    },
+    {
+      "Id": "zaragoza",
+      "Name": "Zaragoza",
+      "Country": "Spain",
+      "State": "Aragón",
+      "Shield": "Aragón",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "zaragoza-coach",
+        "Name": "João Martins",
+        "Overall": 76,
+        "Experience": 35,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Zaragoza"
+    },
+    {
+      "Id": "levante",
+      "Name": "Levante",
+      "Country": "Spain",
+      "State": "Valenciana",
+      "Shield": "Valenciana",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "levante-coach",
+        "Name": "Miguel Oliveira",
+        "Overall": 65,
+        "Experience": 26,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Levante"
+    },
+    {
+      "Id": "tenerife",
+      "Name": "Tenerife",
+      "Country": "Spain",
+      "State": "Canarias",
+      "Shield": "Canarias",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "tenerife-coach",
+        "Name": "Luis Souza",
+        "Overall": 73,
+        "Experience": 13,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Tenerife"
+    },
+    {
+      "Id": "almeria",
+      "Name": "Almería",
+      "Country": "Spain",
+      "State": "Andalucía",
+      "Shield": "Andalucía",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "almeria-coach",
+        "Name": "Manuel Alves",
+        "Overall": 71,
+        "Experience": 10,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Almería"
+    },
+    {
+      "Id": "mirandes",
+      "Name": "Mirandés",
+      "Country": "Spain",
+      "State": "Castilla y León",
+      "Shield": "Castilla y León",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "mirandes-coach",
+        "Name": "Manuel Costa",
+        "Overall": 92,
+        "Experience": 33,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Mirandés"
+    },
+    {
+      "Id": "elche",
+      "Name": "Elche",
+      "Country": "Spain",
+      "State": "Valenciana",
+      "Shield": "Valenciana",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "elche-coach",
+        "Name": "Diego Costa",
+        "Overall": 92,
+        "Experience": 26,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Elche"
+    },
+    {
+      "Id": "cadiz",
+      "Name": "Cádiz",
+      "Country": "Spain",
+      "State": "Andalucía",
+      "Shield": "Andalucía",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "cadiz-coach",
+        "Name": "Ricardo Nunes",
+        "Overall": 69,
+        "Experience": 28,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Cádiz"
+    },
+    {
+      "Id": "ponferradina",
+      "Name": "Ponferradina",
+      "Country": "Spain",
+      "State": "Castilla y León",
+      "Shield": "Castilla y León",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "ponferradina-coach",
+        "Name": "José Santos",
+        "Overall": 65,
+        "Experience": 33,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Ponferradina"
+    },
+    {
+      "Id": "huesca",
+      "Name": "Huesca",
+      "Country": "Spain",
+      "State": "Aragón",
+      "Shield": "Aragón",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "huesca-coach",
+        "Name": "Jorge Monteiro",
+        "Overall": 84,
+        "Experience": 25,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Huesca"
+    },
+    {
+      "Id": "oviedo",
+      "Name": "Real Oviedo",
+      "Country": "Spain",
+      "State": "Asturias",
+      "Shield": "Asturias",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "oviedo-coach",
+        "Name": "Manuel Alves",
+        "Overall": 65,
+        "Experience": 14,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Real Oviedo"
+    },
+    {
+      "Id": "malaga",
+      "Name": "Málaga",
+      "Country": "Spain",
+      "State": "Andalucía",
+      "Shield": "Andalucía",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "malaga-coach",
+        "Name": "Carlos Silva",
+        "Overall": 72,
+        "Experience": 23,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Málaga"
+    },
+    {
+      "Id": "cordoba",
+      "Name": "Córdoba",
+      "Country": "Spain",
+      "State": "Andalucía",
+      "Shield": "Andalucía",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "cordoba-coach",
+        "Name": "João Souza",
+        "Overall": 91,
+        "Experience": 32,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Córdoba"
+    },
+    {
+      "Id": "sabadell",
+      "Name": "Sabadell",
+      "Country": "Spain",
+      "State": "CataluÃÂ±a",
+      "Shield": "CataluÃÂ±a",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "sabadell-coach",
+        "Name": "Roberto Costa",
+        "Overall": 71,
+        "Experience": 38,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Sabadell"
+    },
+    {
+      "Id": "cartagena",
+      "Name": "Cartagena",
+      "Country": "Spain",
+      "State": "Murcia",
+      "Shield": "Murcia",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "cartagena-coach",
+        "Name": "Miguel Souza",
+        "Overall": 67,
+        "Experience": 35,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Cartagena"
+    },
+    {
+      "Id": "castellon",
+      "Name": "Castellón",
+      "Country": "Spain",
+      "State": "Valenciana",
+      "Shield": "Valenciana",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "castellon-coach",
+        "Name": "João Souza",
+        "Overall": 79,
+        "Experience": 33,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Castellón"
+    },
+    {
+      "Id": "alcorcon",
+      "Name": "Alcorcón",
+      "Country": "Spain",
+      "State": "Madrid",
+      "Shield": "Madrid",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "alcorcon-coach",
+        "Name": "Manuel Souza",
+        "Overall": 78,
+        "Experience": 26,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Alcorcón"
+    },
+    {
+      "Id": "albacete",
+      "Name": "Albacete",
+      "Country": "Spain",
+      "State": "Castilla y León",
+      "Shield": "Castilla y León",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "albacete-coach",
+        "Name": "Roberto Oliveira",
+        "Overall": 73,
+        "Experience": 21,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Albacete"
+    },
+    {
+      "Id": "teruel",
+      "Name": "Teruel",
+      "Country": "Spain",
+      "State": "Aragón",
+      "Shield": "Aragón",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "teruel-coach",
+        "Name": "Carlos Ferreira",
+        "Overall": 66,
+        "Experience": 27,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Teruel"
+    },
+    {
+      "Id": "logrones",
+      "Name": "LogroÃÂ±és",
+      "Country": "Spain",
+      "State": "La Rioja",
+      "Shield": "La Rioja",
+      "LeagueId": "esp-la-liga-2",
+      "Coach": {
+        "Id": "logrones-coach",
+        "Name": "Diego Nunes",
+        "Overall": 69,
+        "Experience": 30,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do LogroÃÂ±és"
+    },
+    {
+      "Id": "zaf-kaizer-chiefs",
+      "Name": "Kaizer Chiefs",
+      "Country": "South Africa",
+      "State": "Gauteng",
+      "Shield": "GAU",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-kaizer-chiefs-coach",
+        "Name": "Roberto Ferreira",
+        "Overall": 92,
+        "Experience": 38,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Kaizer Chiefs"
+    },
+    {
+      "Id": "zaf-orlando-pirates",
+      "Name": "Orlando Pirates",
+      "Country": "South Africa",
+      "State": "Gauteng",
+      "Shield": "GAU",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-orlando-pirates-coach",
+        "Name": "Jorge Silva",
+        "Overall": 65,
+        "Experience": 37,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Orlando Pirates"
+    },
+    {
+      "Id": "zaf-mamelodi-sundowns",
+      "Name": "Mamelodi Sundowns",
+      "Country": "South Africa",
+      "State": "Gauteng",
+      "Shield": "GAU",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-mamelodi-sundowns-coach",
+        "Name": "Afonso Monteiro",
+        "Overall": 65,
+        "Experience": 36,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Mamelodi Sundowns"
+    },
+    {
+      "Id": "zaf-cape-town-city",
+      "Name": "Cape Town City",
+      "Country": "South Africa",
+      "State": "Western Cape",
+      "Shield": "WES",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-cape-town-city-coach",
+        "Name": "João Dias",
+        "Overall": 71,
+        "Experience": 27,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Cape Town City"
+    },
+    {
+      "Id": "zaf-supersport-united",
+      "Name": "SuperSport United",
+      "Country": "South Africa",
+      "State": "Gauteng",
+      "Shield": "GAU",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-supersport-united-coach",
+        "Name": "Fernando Martins",
+        "Overall": 84,
+        "Experience": 32,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do SuperSport United"
+    },
+    {
+      "Id": "zaf-amazulu",
+      "Name": "AmaZulu",
+      "Country": "South Africa",
+      "State": "KwaZulu-Natal",
+      "Shield": "KWA",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-amazulu-coach",
+        "Name": "Tiago Ferreira",
+        "Overall": 87,
+        "Experience": 33,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do AmaZulu"
+    },
+    {
+      "Id": "zaf-stellenbosch",
+      "Name": "Stellenbosch",
+      "Country": "South Africa",
+      "State": "Western Cape",
+      "Shield": "WES",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-stellenbosch-coach",
+        "Name": "Ricardo Silva",
+        "Overall": 87,
+        "Experience": 28,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Stellenbosch"
+    },
+    {
+      "Id": "zaf-chippa-united",
+      "Name": "Chippa United",
+      "Country": "South Africa",
+      "State": "Eastern Cape",
+      "Shield": "EAS",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-chippa-united-coach",
+        "Name": "Jorge Costa",
+        "Overall": 84,
+        "Experience": 13,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Chippa United"
+    },
+    {
+      "Id": "zaf-sekhukhune",
+      "Name": "Sekhukhune United",
+      "Country": "South Africa",
+      "State": "Limpopo",
+      "Shield": "LIM",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-sekhukhune-coach",
+        "Name": "Manuel Martins",
+        "Overall": 77,
+        "Experience": 13,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Sekhukhune United"
+    },
+    {
+      "Id": "zaf-richards-bay",
+      "Name": "Richards Bay",
+      "Country": "South Africa",
+      "State": "KwaZulu-Natal",
+      "Shield": "KWA",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-richards-bay-coach",
+        "Name": "Paulo Costa",
+        "Overall": 84,
+        "Experience": 26,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Richards Bay"
+    },
+    {
+      "Id": "zaf-ts-galaxy",
+      "Name": "TS Galaxy",
+      "Country": "South Africa",
+      "State": "Gauteng",
+      "Shield": "GAU",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-ts-galaxy-coach",
+        "Name": "José Oliveira",
+        "Overall": 89,
+        "Experience": 40,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do TS Galaxy"
+    },
+    {
+      "Id": "zaf-golden-arrows",
+      "Name": "Golden Arrows",
+      "Country": "South Africa",
+      "State": "KwaZulu-Natal",
+      "Shield": "KWA",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-golden-arrows-coach",
+        "Name": "Tiago Ferreira",
+        "Overall": 75,
+        "Experience": 40,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Golden Arrows"
+    },
+    {
+      "Id": "zaf-moroka-swallows",
+      "Name": "Moroka Swallows",
+      "Country": "South Africa",
+      "State": "Gauteng",
+      "Shield": "GAU",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-moroka-swallows-coach",
+        "Name": "Luis Santos",
+        "Overall": 65,
+        "Experience": 22,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Moroka Swallows"
+    },
+    {
+      "Id": "zaf-polokwane",
+      "Name": "Polokwane City",
+      "Country": "South Africa",
+      "State": "Limpopo",
+      "Shield": "LIM",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-polokwane-coach",
+        "Name": "Luis Monteiro",
+        "Overall": 84,
+        "Experience": 38,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Polokwane City"
+    },
+    {
+      "Id": "zaf-cape-town-spurs",
+      "Name": "Cape Town Spurs",
+      "Country": "South Africa",
+      "State": "Western Cape",
+      "Shield": "WES",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-cape-town-spurs-coach",
+        "Name": "Jorge Nunes",
+        "Overall": 73,
+        "Experience": 39,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Cape Town Spurs"
+    },
+    {
+      "Id": "zaf-marumo-gallants",
+      "Name": "Marumo Gallants",
+      "Country": "South Africa",
+      "State": "Limpopo",
+      "Shield": "LIM",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-marumo-gallants-coach",
+        "Name": "Ricardo Gomes",
+        "Overall": 84,
+        "Experience": 36,
+        "Tactics": "3-4-3"
+      },
+      "Stadium": "Estadio do Marumo Gallants"
+    },
+    {
+      "Id": "zaf-royal-am",
+      "Name": "Royal AM",
+      "Country": "South Africa",
+      "State": "KwaZulu-Natal",
+      "Shield": "KWA",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-royal-am-coach",
+        "Name": "João Ferreira",
+        "Overall": 68,
+        "Experience": 37,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Royal AM"
+    },
+    {
+      "Id": "zaf-baroka",
+      "Name": "Baroka FC",
+      "Country": "South Africa",
+      "State": "Limpopo",
+      "Shield": "LIM",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-baroka-coach",
+        "Name": "Jorge Silva",
+        "Overall": 84,
+        "Experience": 20,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Baroka FC"
+    },
+    {
+      "Id": "zaf-black-leopards",
+      "Name": "Black Leopards",
+      "Country": "South Africa",
+      "State": "Limpopo",
+      "Shield": "LIM",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-black-leopards-coach",
+        "Name": "Diego Ferreira",
+        "Overall": 74,
+        "Experience": 18,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Black Leopards"
+    },
+    {
+      "Id": "zaf-platinum-stars",
+      "Name": "Platinum Stars",
+      "Country": "South Africa",
+      "State": "Limpopo",
+      "Shield": "LIM",
+      "LeagueId": "zaf-premier",
+      "Coach": {
+        "Id": "zaf-platinum-stars-coach",
+        "Name": "João Alves",
+        "Overall": 86,
+        "Experience": 14,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Platinum Stars"
+    },
+    {
+      "Id": "sau-al-hilal",
+      "Name": "Al-Hilal",
+      "Country": "Saudi Arabia",
+      "State": "Riyadh",
+      "Shield": "RIY",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-hilal-coach",
+        "Name": "Afonso Monteiro",
+        "Overall": 66,
+        "Experience": 13,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Al-Hilal"
+    },
+    {
+      "Id": "sau-al-nassr",
+      "Name": "Al-Nassr",
+      "Country": "Saudi Arabia",
+      "State": "Riyadh",
+      "Shield": "RIY",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-nassr-coach",
+        "Name": "Diego Gomes",
+        "Overall": 81,
+        "Experience": 27,
+        "Tactics": "4-4-2"
+      },
+      "Stadium": "Estadio do Al-Nassr"
+    },
+    {
+      "Id": "sau-al-ittihad",
+      "Name": "Al-Ittihad",
+      "Country": "Saudi Arabia",
+      "State": "Jeddah",
+      "Shield": "JED",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-ittihad-coach",
+        "Name": "Paulo Oliveira",
+        "Overall": 66,
+        "Experience": 21,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Al-Ittihad"
+    },
+    {
+      "Id": "sau-al-ahli",
+      "Name": "Al-Ahli",
+      "Country": "Saudi Arabia",
+      "State": "Jeddah",
+      "Shield": "JED",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-ahli-coach",
+        "Name": "Tiago Ferreira",
+        "Overall": 71,
+        "Experience": 31,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Al-Ahli"
+    },
+    {
+      "Id": "sau-al-shabab",
+      "Name": "Al-Shabab",
+      "Country": "Saudi Arabia",
+      "State": "Riyadh",
+      "Shield": "RIY",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-shabab-coach",
+        "Name": "Ricardo Monteiro",
+        "Overall": 92,
+        "Experience": 14,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Al-Shabab"
+    },
+    {
+      "Id": "sau-al-qadsiah",
+      "Name": "Al-Qadsiah",
+      "Country": "Saudi Arabia",
+      "State": "Khobar",
+      "Shield": "KHO",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-qadsiah-coach",
+        "Name": "Carlos Alves",
+        "Overall": 66,
+        "Experience": 25,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Al-Qadsiah"
+    },
+    {
+      "Id": "sau-al-taawoun",
+      "Name": "Al-Taawoun",
+      "Country": "Saudi Arabia",
+      "State": "Khobar",
+      "Shield": "KHO",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-taawoun-coach",
+        "Name": "Carlos Martins",
+        "Overall": 72,
+        "Experience": 23,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Al-Taawoun"
+    },
+    {
+      "Id": "sau-al-fayha",
+      "Name": "Al-Fayha",
+      "Country": "Saudi Arabia",
+      "State": "Al Khobar",
+      "Shield": "AL ",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-fayha-coach",
+        "Name": "Fernando Oliveira",
+        "Overall": 82,
+        "Experience": 17,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Al-Fayha"
+    },
+    {
+      "Id": "sau-al-ettifaq",
+      "Name": "Al-Ettifaq",
+      "Country": "Saudi Arabia",
+      "State": "Dammam",
+      "Shield": "DAM",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-ettifaq-coach",
+        "Name": "Ricardo Santos",
+        "Overall": 81,
+        "Experience": 23,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Al-Ettifaq"
+    },
+    {
+      "Id": "sau-al-wehda",
+      "Name": "Al-Wehda",
+      "Country": "Saudi Arabia",
+      "State": "Medina",
+      "Shield": "MED",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-wehda-coach",
+        "Name": "José Silva",
+        "Overall": 85,
+        "Experience": 39,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Al-Wehda"
+    },
+    {
+      "Id": "sau-al-fateh",
+      "Name": "Al-Fateh",
+      "Country": "Saudi Arabia",
+      "State": "Khobar",
+      "Shield": "KHO",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-fateh-coach",
+        "Name": "Roberto Rocha",
+        "Overall": 68,
+        "Experience": 40,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Al-Fateh"
+    },
+    {
+      "Id": "sau-al-hazem",
+      "Name": "Al-Hazem",
+      "Country": "Saudi Arabia",
+      "State": "Riyadh",
+      "Shield": "RIY",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-hazem-coach",
+        "Name": "Fernando Silva",
+        "Overall": 84,
+        "Experience": 20,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Al-Hazem"
+    },
+    {
+      "Id": "sau-al-okhdood",
+      "Name": "Al-Okhdood",
+      "Country": "Saudi Arabia",
+      "State": "Abha",
+      "Shield": "ABH",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-okhdood-coach",
+        "Name": "João Alves",
+        "Overall": 70,
+        "Experience": 40,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Al-Okhdood"
+    },
+    {
+      "Id": "sau-damac",
+      "Name": "Damac",
+      "Country": "Saudi Arabia",
+      "State": "Riyadh",
+      "Shield": "RIY",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-damac-coach",
+        "Name": "Diego Costa",
+        "Overall": 76,
+        "Experience": 20,
+        "Tactics": "4-3-3"
+      },
+      "Stadium": "Estadio do Damac"
+    },
+    {
+      "Id": "sau-al-riyadh",
+      "Name": "Al-Riyadh",
+      "Country": "Saudi Arabia",
+      "State": "Riyadh",
+      "Shield": "RIY",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-riyadh-coach",
+        "Name": "Manuel Oliveira",
+        "Overall": 92,
+        "Experience": 23,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Al-Riyadh"
+    },
+    {
+      "Id": "sau-abha",
+      "Name": "Abha Club",
+      "Country": "Saudi Arabia",
+      "State": "Abha",
+      "Shield": "ABH",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-abha-coach",
+        "Name": "Afonso Monteiro",
+        "Overall": 73,
+        "Experience": 37,
+        "Tactics": "5-4-1"
+      },
+      "Stadium": "Estadio do Abha Club"
+    },
+    {
+      "Id": "sau-al-khaleej",
+      "Name": "Al-Khaleej",
+      "Country": "Saudi Arabia",
+      "State": "Khobar",
+      "Shield": "KHO",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-khaleej-coach",
+        "Name": "Roberto Souza",
+        "Overall": 86,
+        "Experience": 36,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Al-Khaleej"
+    },
+    {
+      "Id": "sau-al-tai",
+      "Name": "Al-Tai",
+      "Country": "Saudi Arabia",
+      "State": "Buraidah",
+      "Shield": "BUR",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-tai-coach",
+        "Name": "Ricardo Martins",
+        "Overall": 76,
+        "Experience": 38,
+        "Tactics": "4-5-1"
+      },
+      "Stadium": "Estadio do Al-Tai"
+    },
+    {
+      "Id": "sau-al-raed",
+      "Name": "Al-Raed",
+      "Country": "Saudi Arabia",
+      "State": "Buraydah",
+      "Shield": "BUR",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-raed-coach",
+        "Name": "Luis Santos",
+        "Overall": 74,
+        "Experience": 11,
+        "Tactics": "5-3-2"
+      },
+      "Stadium": "Estadio do Al-Raed"
+    },
+    {
+      "Id": "sau-al-orubah",
+      "Name": "Al-Orubah",
+      "Country": "Saudi Arabia",
+      "State": "Abha",
+      "Shield": "ABH",
+      "LeagueId": "sau-pro",
+      "Coach": {
+        "Id": "sau-al-orubah-coach",
+        "Name": "Fernando Rocha",
+        "Overall": 87,
+        "Experience": 24,
+        "Tactics": "3-5-2"
+      },
+      "Stadium": "Estadio do Al-Orubah"
+    }
+  ]
+}
