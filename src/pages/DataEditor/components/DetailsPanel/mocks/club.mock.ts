@@ -15,10 +15,13 @@ export const CLUB_DETAILS_LIST: ClubDetails[] = [
     primaryColor: '#003399',
     secondaryColor: '#FFFFFF',
     tertiaryColor: null,
-    logoRef: null,
-    primaryKitRef: null,
-    secondaryKitRef: null,
-    tertiaryKitRef: null,
+    logoRef: 'https://upload.wikimedia.org/wikipedia/commons/b/bc/Logo_Cruzeiro_1996.png',
+    primaryKitRef:
+      'https://www.futebolreligiao.com.br/image/cache/catalog/Cruzeiro/camisa-i-cruzeiro-2025-adidas-oficial-900x900.png',
+    secondaryKitRef:
+      'https://images.tcdn.com.br/img/img_prod/1052037/camisa_cruzeiro_away_2024_25_masculina_5249_1_4df282f7a983c2dacc34efc4c130fc53.png',
+    tertiaryKitRef:
+      'https://static.wixstatic.com/media/284fea_bf494e4ac37a4980819ede522a959294~mv2.png/v1/fill/w_550,h_568,al_c,lg_1,q_85,enc_avif,quality_auto/284fea_bf494e4ac37a4980819ede522a959294~mv2.png',
     goalkeeperKitRef: null,
     state: 'MG',
     country: 'BRA',
@@ -390,7 +393,8 @@ export const CLUB_DETAILS_LIST: ClubDetails[] = [
     primaryColor: '#FFF',
     secondaryColor: '#000',
     tertiaryColor: null,
-    logoRef: null,
+    logoRef:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Atletico_mineiro_galo.png/500px-Atletico_mineiro_galo.png',
     primaryKitRef: null,
     secondaryKitRef: null,
     tertiaryKitRef: null,

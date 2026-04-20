@@ -58,12 +58,13 @@ export const detailsPanelPtBR = {
     // Players
     playersSection: 'Elenco',
     playerName: 'Nome',
-    playerPosition: 'Pos.',
+    playerPosition: 'Posição',
     playerAge: 'Idade',
+    playerAgeDisclaimer: 'Idade calculada com base no início da temporada',
     playerCountry: 'País',
     playerFoot: 'Pé',
     playerSide: 'Lado',
-    playerReputation: 'Rep.',
+    playerReputation: 'Reputação',
     noPlayers: 'Nenhum jogador registrado',
     playersCount: '{count} jogadores',
 
@@ -97,10 +98,10 @@ export const detailsPanelPtBR = {
     },
 
     specialSkills: {
-      FREE_KICK_SPECIALIST: 'Esp. Falta',
-      PENALTY_SPECIALIST: 'Esp. Pênalti',
-      PENALTY_DEFENDER: 'Def. Pênalti',
-      ASSIST_SPECIALIST: 'Esp. Assistências',
+      FREE_KICK_SPECIALIST: 'Batedor de Faltas',
+      PENALTY_SPECIALIST: 'Especialista em Pênaltis',
+      PENALTY_DEFENDER: 'Defensor de Pênaltis',
+      ASSIST_SPECIALIST: 'Garçom',
       GOALSCORER: 'Artilheiro',
     },
   },
