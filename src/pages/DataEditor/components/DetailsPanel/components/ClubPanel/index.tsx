@@ -1,10 +1,10 @@
 import type { ClubDetails } from '../../types'
+import TeamHeader from '../TeamHeader'
 import dayjs from 'dayjs'
 import IconStadium from '~icons/mdi/stadium-variant'
 import IconWhistle from '~icons/mdi/whistle'
 import IconShirt from '~icons/streamline-flex/shirt-solid'
 
-import ColorSwatch from '@/components/ColorSwatch'
 import KitSlot from '@/components/KitSlot'
 import RatingBar from '@/components/RatingBar'
 import Table from '@/components/Table'
@@ -113,68 +113,22 @@ const ClubPanel = ({ club }: ClubPanelProps) => {
     >
       {/* ── Header ── */}
       <div className='p-5 flex items-center gap-4'>
-        <div
-          className={cn('size-24 rounded-sm flex items-center justify-center shrink-0', {
-            'border-2 border-base-content/25': !club.logoRef,
-          })}
-          style={!club.logoRef ? { backgroundColor: club.primaryColor } : undefined}
-        >
-          {club.logoRef ? (
-            <img src={club.logoRef} alt={club.shortName} className='size-full object-contain' />
-          ) : (
-            <span className='text-2xl font-black' style={{ color: club.secondaryColor }}>
-              {club.abbrName}
-            </span>
-          )}
-        </div>
-
-        <div className='flex-2 min-w-0'>
-          <h2 className='text-lg font-bold text-base-content m-0 leading-tight uppercase'>
-            {club.name}
-          </h2>
-
-          <div className='flex items-center gap-2 mt-1'>
-            <span className='text-xs text-base-content/50'>{club.shortName}</span>
-
-            {club.state && (
-              <>
-                <span className='text-base-content/20'>·</span>
-
-                <span className='text-xs text-base-content/50'>
-                  {td(`static.brazilianStates.${club.state}.name`)}
-                </span>
-              </>
-            )}
-
-            <span className='text-base-content/20'>·</span>
-
-            <span className='text-xs text-base-content/50'>
-              {td(`static.countries.${club.country}.countryName`)}
-            </span>
-          </div>
-
-          <div className='flex items-center gap-3 mt-2'>
-            <ColorSwatch
-              color={club.primaryColor}
-              label={t('dataEditor.detailsPanel.clubPanel.primaryColor')}
-            />
-
-            <ColorSwatch
-              color={club.secondaryColor}
-              label={t('dataEditor.detailsPanel.clubPanel.secondaryColor')}
-            />
-
-            {club.tertiaryColor && (
-              <ColorSwatch
-                color={club.tertiaryColor}
-                label={t('dataEditor.detailsPanel.clubPanel.tertiaryColor')}
-              />
-            )}
-          </div>
+        <div className='flex-1'>
+          <TeamHeader
+            logoRef={club.logoRef}
+            primaryColor={club.primaryColor}
+            secondaryColor={club.secondaryColor}
+            tertiaryColor={club.tertiaryColor}
+            name={club.name}
+            shortName={club.shortName}
+            abbrName={club.abbrName}
+            state={club.state}
+            country={club.country}
+          />
         </div>
 
         {/* ── Ratings ── */}
-        <div className='flex-1 flex flex-col gap-2 min-w-0'>
+        <div className='min-w-sm flex flex-col gap-2'>
           <RatingBar
             label={t('dataEditor.detailsPanel.clubPanel.reputation')}
             value={club.reputation}

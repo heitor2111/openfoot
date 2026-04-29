@@ -105,4 +105,32 @@ export const detailsPanelPtBR = {
       GOALSCORER: 'Artilheiro',
     },
   },
+
+  nationalTeamPanel: {
+    // Header
+    country: 'País',
+    primaryColor: 'Primária',
+    secondaryColor: 'Secundária',
+    tertiaryColor: 'Terciária',
+
+    // Stadium
+    stadiumSection: 'Estádio',
+    stadiumName: 'Nome',
+    stadiumNickname: 'Apelido',
+    stadiumCapacity: 'Capacidade',
+
+    // Coach
+    coachSection: 'Técnico',
+    coachName: 'Nome',
+    coachCountry: 'Nacionalidade',
+    coachTactic: 'Tática Favorita',
+    noCoach: 'Sem técnico',
+
+    // Uniforms
+    uniformsSection: 'Uniformes',
+    primaryKit: 'Principal',
+    secondaryKit: 'Reserva',
+    tertiaryKit: 'Alternativo',
+    goalkeeperKit: 'Goleiro',
+  },
 }

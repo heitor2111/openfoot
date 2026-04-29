@@ -10,8 +10,10 @@ import type { Player } from '@/types/entities/player'
 import type { Stadium } from '@/types/entities/stadium'
 
 import ClubPanel from './components/ClubPanel'
+import NationalTeamPanel from './components/NationalTeamPanel'
 import { CLUB_DETAILS_LIST } from './mocks/club.mock'
-import type { ClubDetails } from './types'
+import { NATIONAL_TEAM_DETAILS_LIST } from './mocks/nationalTeam.mock'
+import type { ClubDetails, NationalTeamDetails } from './types'
 
 interface DetailsPanelProps {
   activeTab: TabType | null
@@ -30,11 +32,21 @@ const DetailsPanel = ({ activeTab, selectedId }: DetailsPanelProps) => {
       const item = CLUB_DETAILS_LIST.find((club) => club.id === selectedId) || null
       setItem(item)
     }
+
+    if (activeTab === 'nationalTeam') {
+      const item =
+        NATIONAL_TEAM_DETAILS_LIST.find((nationalTeam) => nationalTeam.id === selectedId) || null
+      setItem(item)
+    }
   }
 
   const getItemComponent = (item: ItemType) => {
     if (activeTab === 'club') {
       return <ClubPanel club={item as ClubDetails} />
+    }
+
+    if (activeTab === 'nationalTeam') {
+      return <NationalTeamPanel nationalTeam={item as NationalTeamDetails} />
     }
   }
 

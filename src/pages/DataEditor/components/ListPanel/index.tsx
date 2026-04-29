@@ -14,7 +14,9 @@ import type { Stadium } from '@/types/entities/stadium'
 import { cn } from '@/utils/styles'
 
 import ClubItem from './components/ClubItem'
+import NationalTeamItem from './components/NationalTeamItem'
 import { CLUB_LIST } from './mocks/club.mock'
+import { NATIONAL_TEAM_LIST } from './mocks/nationalTeam.mock'
 
 interface ListPanelProps {
   activeTab: TabType | null
@@ -49,11 +51,26 @@ const ListPanel = ({
 
       setList(items)
     }
+
+    if (activeTab === 'nationalTeam') {
+      const items = NATIONAL_TEAM_LIST.filter(
+        (nt) =>
+          nt.name.toLowerCase().includes(search.toLowerCase()) ||
+          nt.shortName.toLowerCase().includes(search.toLowerCase()) ||
+          nt.abbrName.toLowerCase().includes(search.toLowerCase())
+      )
+
+      setList(items)
+    }
   }
 
   const getItemComponent = (item: ItemType) => {
     if (activeTab === 'club') {
       return <ClubItem club={item as Club} />
+    }
+
+    if (activeTab === 'nationalTeam') {
+      return <NationalTeamItem nationalTeam={item as NationalTeam} />
     }
   }
 
