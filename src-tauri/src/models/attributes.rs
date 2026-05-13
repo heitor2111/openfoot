@@ -126,7 +126,7 @@ pub fn zone_strength(players: &[Player], zone: Zone) -> f64 {
         .map(|player| {
             let attrs = Attributes::from_player(player);
             let primary = position_primary(&player.position);
-            mean_effective_attrs(&attrs, &primary, player.stamina)
+            mean_effective_attrs_energy(&attrs, &primary, player.stamina, player.energy)
         })
         .sum::<f64>()
         / zone_players.len() as f64;
@@ -173,9 +173,13 @@ pub fn out_of_position_multiplier(player_position: &Position, slot_zone: &SlotZo
 }
 
 fn mean_effective_attrs(attrs: &Attributes, kinds: &[AttributeKind], sta_atual: u8) -> f64 {
+    mean_effective_attrs_energy(attrs, kinds, sta_atual, 100.0)
+}
+
+fn mean_effective_attrs_energy(attrs: &Attributes, kinds: &[AttributeKind], sta_atual: u8, energy: f64) -> f64 {
     kinds
         .iter()
-        .map(|kind| attrs.get_effective_attribute(kind.clone(), sta_atual))
+        .map(|kind| attrs.get_effective_attribute_with_energy(kind.clone(), sta_atual, energy))
         .sum::<f64>()
         / kinds.len() as f64
 }
@@ -261,8 +265,11 @@ mod tests {
             defense,
             stamina,
             team_id: "t-1".to_string(),
-            league_id: "l-1".to_string(),
+            league_id: Some("l-1".to_string()),
             status: PlayerStatus::default(),
+            age: None,
+            nationality: None,
+            market_value: None,
             energy: 100.0,
         }
     }

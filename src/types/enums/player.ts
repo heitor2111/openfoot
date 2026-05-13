@@ -18,21 +18,34 @@ export enum PlayerReputation {
 }
 
 /**
- * Posições do jogador
+ * Posições do jogador — espelha o enum `Position` do backend Rust.
+ * Os valores das chaves correspondem exatamente às strings serializadas pelo backend.
  *
  * @enum {string}
  */
 export enum PlayerPosition {
   /** Goleiro */
-  GOALKEEPER = 'GK',
+  GOL = 'GOL',
   /** Zagueiro */
-  DEFENDER = 'DF',
-  /** Lateral */
-  SIDE_BACK = 'SB',
-  /** Meio-campista */
-  MIDFIELDER = 'MF',
+  ZAG = 'ZAG',
+  /** Lateral-esquerdo */
+  LAT_E = 'LAT-E',
+  /** Lateral-direito */
+  LAT_D = 'LAT-D',
+  /** Volante */
+  VOL = 'VOL',
+  /** Meia */
+  MEI = 'MEI',
+  /** Meia-atacante */
+  MEI_A = 'MEI-A',
+  /** Ponta-esquerda */
+  PNT_E = 'PNT-E',
+  /** Ponta-direita */
+  PNT_D = 'PNT-D',
+  /** Segundo-atacante */
+  SA = 'SA',
   /** Atacante */
-  FORWARD = 'FW',
+  ATA = 'ATA',
 }
 
 /**

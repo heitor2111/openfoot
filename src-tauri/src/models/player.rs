@@ -20,7 +20,8 @@ pub struct Player {
     pub defense: u8,
     pub stamina: u8,
     pub team_id: String,
-    pub league_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub league_id: Option<String>,
     #[serde(default)]
     pub status: PlayerStatus,
     /// Idade do jogador (opcional, presente em jogadores importados do CSV)
@@ -29,6 +30,9 @@ pub struct Player {
     /// Nacionalidade do jogador (opcional, código de 3 letras ISO)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nationality: Option<String>,
+    /// Valor de mercado do jogador em moeda base do dataset.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub market_value: Option<u64>,
     /// Energia atual (0–100). Não persistida no JSON; inicializada em 100 na carreira.
     #[serde(skip)]
     pub energy: f64,
@@ -49,10 +53,11 @@ impl Default for Player {
             defense: 50,
             stamina: 50,
             team_id: String::new(),
-            league_id: String::new(),
+            league_id: None,
             status: PlayerStatus::default(),
             age: None,
             nationality: None,
+            market_value: None,
             energy: 100.0,
         }
     }

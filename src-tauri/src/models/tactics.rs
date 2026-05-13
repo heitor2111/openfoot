@@ -84,9 +84,9 @@ pub enum PlayStyle {
     PosseDeBola,
     #[serde(rename = "Contra-ataque")]
     Contraataque,
-    #[serde(rename = "Bola Direta")]
+    #[serde(rename = "Transição Rápida", alias = "Transicao Rapida", alias = "Bola Direta")]
     BolaDireta,
-    #[serde(rename = "Jogo Aereo")]
+    #[serde(rename = "Jogo pelos Lados", alias = "Jogo Aereo", alias = "Jogo Aéreo")]
     JogoAereo,
     #[serde(rename = "Retranca")]
     Retranca,

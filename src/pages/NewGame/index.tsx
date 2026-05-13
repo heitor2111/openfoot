@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router'
 
 import { fetchLeagues, startNewCareerMulti, type LeagueOption } from '@/libs/tauri/career'
 
-type Step = 1 | 2 | 3 | 4
+type Step = 1 | 2 | 3
 
-const STEP_LABELS = ['Nome do Técnico', 'Países', 'Escolha seu Time', 'Confirmar']
+const STEP_LABELS = ['Nome + Países', 'Escolha seu Time', 'Confirmar']
 
 const StepIndicator = ({ current }: { current: Step }) => (
   <div className='flex items-center gap-2 text-sm mb-6'>
@@ -71,6 +71,19 @@ const NewGame = () => {
     [leagues],
   )
 
+  // Países agrupados por confederação
+  const confederationGroups = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const league of leagues) {
+      const conf = league.confederation || 'Outros'
+      if (!map.has(conf)) map.set(conf, [])
+      const confCountries = map.get(conf)!
+      if (!confCountries.includes(league.country)) confCountries.push(league.country)
+    }
+    for (const [, confCountries] of map) confCountries.sort()
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))
+  }, [leagues])
+
   // Ligas de todos os países selecionados (background)
   const selectedLeagueIds = useMemo(
     () => leagues.filter((l) => selectedCountries.includes(l.country)).map((l) => l.id),
@@ -98,18 +111,13 @@ const NewGame = () => {
   }
 
   const goToStep2 = () => {
-    if (!coachName.trim()) return
+    if (!coachName.trim() || selectedCountries.length === 0) return
     setStep(2)
   }
 
   const goToStep3 = () => {
-    if (selectedCountries.length === 0) return
-    setStep(3)
-  }
-
-  const goToStep4 = () => {
     if (!selectedLeagueId || !teamId) return
-    setStep(4)
+    setStep(3)
   }
 
   const handleStart = async () => {
@@ -148,14 +156,11 @@ const NewGame = () => {
           <>
             <StepIndicator current={step} />
 
-            {/* ── Passo 1: Nome do Técnico ── */}
+            {/* ── Passo 1: Nome do Técnico + Países ── */}
             {step === 1 && (
-              <div className='flex flex-col gap-4'>
-                <p className='text-sm opacity-70'>
-                  Digite o seu nome como técnico. Este nome será exibido durante toda a carreira.
-                </p>
-                
-                <div className='bg-base-100 border border-base-content/20 rounded-md p-6 max-w-md'>
+              <div className='flex flex-col gap-5'>
+                {/* Nome */}
+                <div className='bg-base-100 border border-base-content/20 rounded-md p-5 max-w-md'>
                   <label className='form-control'>
                     <div className='label'>
                       <span className='label-text font-semibold'>Nome do Técnico</span>
@@ -174,55 +179,59 @@ const NewGame = () => {
                     </div>
                   </label>
                 </div>
-              </div>
-            )}
 
-            {/* ── Passo 2: Escolher países (lista com checkboxes) ── */}
-            {step === 2 && (
-              <div className='flex flex-col gap-4'>
-                <div className='flex items-center justify-between'>
-                  <p className='text-sm opacity-70'>
-                    Selecione os países que rodarão na simulação (background). Todas as ligas desses países serão incluídas.
-                  </p>
-                  <button
-                    type='button'
-                    className='btn btn-sm btn-outline'
-                    onClick={selectAllCountries}
-                  >
-                    Selecionar todos
-                  </button>
-                </div>
-                
-                <div className='bg-base-100 border border-base-content/20 rounded-md divide-y divide-base-content/10 max-h-[500px] overflow-y-auto'>
-                  {countries.map((country) => {
-                    const selected = selectedCountries.includes(country)
-                    const leagueCount = leagues.filter((l) => l.country === country).length
-                    return (
-                      <label
-                        key={country}
-                        className='flex items-center gap-3 p-3 hover:bg-base-200 cursor-pointer transition-colors'
-                      >
-                        <input
-                          type='checkbox'
-                          className='checkbox checkbox-success'
-                          checked={selected}
-                          onChange={() => toggleCountry(country)}
-                        />
-                        <div className='flex-1'>
-                          <div className='font-semibold'>{country}</div>
-                          <div className='text-xs opacity-60'>
-                            {leagueCount} {leagueCount === 1 ? 'liga' : 'ligas'}
-                          </div>
+                {/* Países por confederação */}
+                <div>
+                  <div className='flex items-center justify-between mb-2'>
+                    <p className='text-sm opacity-70'>
+                      Países que rodarão na simulação
+                    </p>
+                    <button
+                      type='button'
+                      className='btn btn-xs btn-outline'
+                      onClick={selectAllCountries}
+                    >
+                      Selecionar todos
+                    </button>
+                  </div>
+                  <div className='bg-base-100 border border-base-content/20 rounded-md divide-y divide-base-content/10 max-h-[400px] overflow-y-auto'>
+                    {confederationGroups.map(([conf, confCountries]) => (
+                      <div key={conf}>
+                        <div className='px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest opacity-40 bg-base-200/50'>
+                          {conf}
                         </div>
-                      </label>
-                    )
-                  })}
+                        {confCountries.map((country) => {
+                          const selected = selectedCountries.includes(country)
+                          const leagueCount = leagues.filter((l) => l.country === country).length
+                          return (
+                            <label
+                              key={country}
+                              className='flex items-center gap-3 px-4 py-2 hover:bg-base-200 cursor-pointer transition-colors border-t border-base-content/5'
+                            >
+                              <input
+                                type='checkbox'
+                                className='checkbox checkbox-success checkbox-sm'
+                                checked={selected}
+                                onChange={() => toggleCountry(country)}
+                              />
+                              <div className='flex-1'>
+                                <span className='font-medium text-sm'>{country}</span>
+                                <span className='text-xs opacity-50 ml-2'>
+                                  {leagueCount} {leagueCount === 1 ? 'liga' : 'ligas'}
+                                </span>
+                              </div>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* ── Passo 3: Escolher país → liga → time (accordion) ── */}
-            {step === 3 && (
+            {/* ── Passo 2: Escolher país → liga → time (accordion) ── */}
+            {step === 2 && (
               <div className='flex flex-col gap-4'>
                 <p className='text-sm opacity-70'>
                   Escolha o time que você vai gerenciar. Expanda o país e a liga para ver os times disponíveis.
@@ -325,8 +334,8 @@ const NewGame = () => {
               </div>
             )}
 
-            {/* ── Passo 4: Confirmar ── */}
-            {step === 4 && (
+            {/* ── Passo 3: Confirmar ── */}
+            {step === 3 && (
               <div className='flex flex-col gap-4'>
                 <p className='text-sm opacity-70'>
                   Confirme os dados antes de iniciar sua carreira.
@@ -415,7 +424,7 @@ const NewGame = () => {
                 type='button'
                 className='btn btn-primary'
                 onClick={goToStep2}
-                disabled={!coachName.trim()}
+                disabled={!coachName.trim() || selectedCountries.length === 0}
               >
                 Próximo →
               </button>
@@ -426,24 +435,13 @@ const NewGame = () => {
                 type='button'
                 className='btn btn-primary'
                 onClick={goToStep3}
-                disabled={selectedCountries.length === 0}
-              >
-                Próximo →
-              </button>
-            )}
-
-            {step === 3 && (
-              <button
-                type='button'
-                className='btn btn-primary'
-                onClick={goToStep4}
                 disabled={!selectedLeagueId || !teamId}
               >
                 Próximo →
               </button>
             )}
 
-            {step === 4 && (
+            {step === 3 && (
               <button
                 type='button'
                 className='btn btn-success'

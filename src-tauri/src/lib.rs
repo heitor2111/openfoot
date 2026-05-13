@@ -2,25 +2,47 @@
 
 mod models;
 mod data_loader;
+mod data_patch;
 mod game_engine;
 mod engine;
 
 use data_loader::load_all_leagues;
+use data_patch::{
+    apply_data_patch,
+    create_data_patch,
+    export_data_bundle,
+    export_data_patch_template,
+};
 use game_engine::{
+    get_player_team_squad as get_player_team_squad_state,
+    list_ai_market_activity,
+    list_career_season_history,
+    list_ai_player_offers,
+    list_transfer_market_players_page,
+    make_transfer_offer,
+    respond_ai_player_offer,
     start_career,
     start_career_multi,
     start_new_season,
     snapshot,
     simulate_next_round,
+    AiMarketActivityDto,
+    AiPlayerOfferDto,
     list_available_clubs,
     transfer_coach_to_team,
     CalendarDataDto,
+    CareerSeasonSummaryDto,
     CareerSnapshotDto,
     CareerState,
     ClubOfferDto,
     SimulateRoundResultDto,
+    TransferMarketCatalogDto,
+    TransferMarketPageDto,
+    TransferMarketQueryDto,
+    TransferOfferResultDto,
+    transfer_market_catalog,
 };
-use models::{League, SavedLineup, SlotZone, Tactics};
+use models::{League, Player, SavedLineup, SlotZone, Tactics};
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::State;
@@ -299,6 +321,16 @@ fn get_player_energies(state: State<AppState>) -> Result<HashMap<String, f64>, S
 }
 
 #[tauri::command]
+fn get_player_team_squad(state: State<AppState>) -> Result<Vec<Player>, String> {
+    let career_guard = state.career.lock().unwrap();
+    let career = career_guard
+        .as_ref()
+        .ok_or_else(|| "Nenhuma carreira iniciada".to_string())?;
+
+    get_player_team_squad_state(career)
+}
+
+#[tauri::command]
 fn get_lineup(state: State<AppState>) -> Result<SavedLineup, String> {
     let lineup = state.lineup.lock().unwrap();
     Ok(lineup.clone().unwrap_or_default())
@@ -363,6 +395,116 @@ fn accept_coach_job_offer(
     let all_leagues = leagues_guard.as_ref().unwrap();
 
     transfer_coach_to_team(career, &new_team_id, all_leagues)
+}
+
+// ============================================================
+// Sistema de Transferências de Jogadores
+// ============================================================
+
+#[tauri::command]
+fn list_transfer_market(
+    query: Option<TransferMarketQueryDto>,
+    state: State<AppState>,
+) -> Result<TransferMarketPageDto, String> {
+    let mut leagues_cache = state.leagues.lock().unwrap();
+    ensure_leagues_loaded(&mut leagues_cache)?;
+
+    let all_leagues = leagues_cache
+        .as_ref()
+        .ok_or_else(|| "Falha ao carregar ligas".to_string())?;
+
+    let career_guard = state.career.lock().unwrap();
+    let career = career_guard
+        .as_ref()
+        .ok_or_else(|| "Nenhuma carreira iniciada".to_string())?;
+
+    Ok(list_transfer_market_players_page(
+        career,
+        all_leagues,
+        query.unwrap_or_default(),
+    ))
+}
+
+#[tauri::command]
+fn list_transfer_market_catalog(state: State<AppState>) -> Result<TransferMarketCatalogDto, String> {
+    let mut leagues_cache = state.leagues.lock().unwrap();
+    ensure_leagues_loaded(&mut leagues_cache)?;
+
+    let all_leagues = leagues_cache
+        .as_ref()
+        .ok_or_else(|| "Falha ao carregar ligas".to_string())?;
+
+    let career_guard = state.career.lock().unwrap();
+    let career = career_guard
+        .as_ref()
+        .ok_or_else(|| "Nenhuma carreira iniciada".to_string())?;
+
+    Ok(transfer_market_catalog(career, all_leagues))
+}
+
+#[tauri::command]
+fn submit_transfer_offer(
+    player_id: String,
+    offer_value: u64,
+    state: State<AppState>,
+) -> Result<TransferOfferResultDto, String> {
+    let mut career_guard = state.career.lock().unwrap();
+    let career = career_guard
+        .as_mut()
+        .ok_or_else(|| "Nenhuma carreira iniciada".to_string())?;
+
+    make_transfer_offer(career, &player_id, offer_value)
+}
+
+#[tauri::command]
+fn list_ai_player_transfer_offers(state: State<AppState>) -> Result<Vec<AiPlayerOfferDto>, String> {
+    let career_guard = state.career.lock().unwrap();
+    let career = career_guard
+        .as_ref()
+        .ok_or_else(|| "Nenhuma carreira iniciada".to_string())?;
+
+    Ok(list_ai_player_offers(career))
+}
+
+#[tauri::command]
+fn respond_ai_player_transfer_offer(
+    player_id: String,
+    accept: bool,
+    state: State<AppState>,
+) -> Result<CareerSnapshotDto, String> {
+    let mut leagues_cache = state.leagues.lock().unwrap();
+    ensure_leagues_loaded(&mut leagues_cache)?;
+    let all_leagues = leagues_cache
+        .as_ref()
+        .ok_or_else(|| "Falha ao carregar ligas".to_string())?;
+
+    let mut career_guard = state.career.lock().unwrap();
+    let career = career_guard
+        .as_mut()
+        .ok_or_else(|| "Nenhuma carreira iniciada".to_string())?;
+
+    respond_ai_player_offer(career, &player_id, accept)?;
+    Ok(snapshot(career, all_leagues))
+}
+
+#[tauri::command]
+fn list_ai_market_round_activity(state: State<AppState>) -> Result<Vec<AiMarketActivityDto>, String> {
+    let career_guard = state.career.lock().unwrap();
+    let career = career_guard
+        .as_ref()
+        .ok_or_else(|| "Nenhuma carreira iniciada".to_string())?;
+
+    Ok(list_ai_market_activity(career))
+}
+
+#[tauri::command]
+fn list_career_season_statistics(state: State<AppState>) -> Result<Vec<CareerSeasonSummaryDto>, String> {
+    let career_guard = state.career.lock().unwrap();
+    let career = career_guard
+        .as_ref()
+        .ok_or_else(|| "Nenhuma carreira iniciada".to_string())?;
+
+    Ok(list_career_season_history(career))
 }
 
 // ============================================================
@@ -553,6 +695,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             debug_paths,
             test_json_loading,
+            export_data_bundle,
+            create_data_patch,
+            apply_data_patch,
+            export_data_patch_template,
             fetch_leagues,
             fetch_league,
             start_new_career,
@@ -562,10 +708,18 @@ pub fn run() {
             get_calendar_data,
             save_lineup,
             get_player_energies,
+            get_player_team_squad,
             get_lineup,
             advance_to_next_season,
             list_coach_job_offers,
             accept_coach_job_offer,
+            list_transfer_market,
+            list_transfer_market_catalog,
+            submit_transfer_offer,
+            list_ai_player_transfer_offers,
+            respond_ai_player_transfer_offer,
+            list_ai_market_round_activity,
+            list_career_season_statistics,
             save_career,
             load_career,
             list_saves,

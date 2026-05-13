@@ -39,7 +39,16 @@ pub struct MatchEvent {
     pub minute: u8,
     pub event_type: EventType,
     pub player_name: Option<String>,
+    pub assister_name: Option<String>,
     pub team: Option<TeamSide>,
+}
+
+#[derive(Clone, Debug)]
+pub struct SilentGoalEvent {
+    pub minute: u8,
+    pub team: TeamSide,
+    pub scorer_name: String,
+    pub assister_name: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -71,11 +80,11 @@ pub fn simulate_tick(state: &mut MatchState, home_tactics: &Tactics, away_tactic
 
     if state.minute > 90 {
         state.is_finished = true;
-        return Some(push_event(state, EventType::FullTime, None, None));
+        return Some(push_event(state, EventType::FullTime, None, None, None));
     }
 
     if state.minute == 45 {
-        let event = push_event(state, EventType::HalfTime, None, None);
+        let event = push_event(state, EventType::HalfTime, None, None, None);
         state.minute = state.minute.saturating_add(1);
         return Some(event);
     }
@@ -141,52 +150,53 @@ pub fn simulate_tick(state: &mut MatchState, home_tactics: &Tactics, away_tactic
     tick_event
 }
 
-pub fn simulate_silent(home: Vec<Player>, away: Vec<Player>, home_tactics: Tactics, away_tactics: Tactics) -> (u8, u8, Vec<(u8, TeamSide)>) {
-    let mut home_score = 0u8;
-    let mut away_score = 0u8;
-    let mut goal_events: Vec<(u8, TeamSide)> = Vec::new();
+pub fn simulate_silent(
+    home: Vec<Player>,
+    away: Vec<Player>,
+    home_tactics: Tactics,
+    away_tactics: Tactics,
+) -> (u8, u8, Vec<SilentGoalEvent>) {
+    let home_match_squad: Vec<MatchPlayer> = home
+        .into_iter()
+        .map(|p| MatchPlayer {
+            energy: p.energy,
+            player: p,
+        })
+        .collect();
+    let away_match_squad: Vec<MatchPlayer> = away
+        .into_iter()
+        .map(|p| MatchPlayer {
+            energy: p.energy,
+            player: p,
+        })
+        .collect();
 
-    for minute in 1..=90u8 {
-        let home_mid = zone_strength_with_tactics(
-            &home,
-            TacticsZone::Midfield,
-            &home_tactics.formation,
-            &home_tactics.play_style,
-            None,
-        );
-        let away_mid = zone_strength_with_tactics(
-            &away,
-            TacticsZone::Midfield,
-            &away_tactics.formation,
-            &away_tactics.play_style,
-            None,
-        );
-        let home_advances = zone_contest(home_mid, away_mid);
+    let (home_goals, away_goals, raw_events) = simulate_full(
+        home_match_squad,
+        away_match_squad,
+        &home_tactics,
+        &away_tactics,
+        None,
+        None,
+    );
 
-        if rand::random::<f64>() > 0.25 {
-            continue;
-        }
-
-        let scored = if home_advances {
-            silent_attack_resolves(&home, &away, TeamSide::Home, &home_tactics)
-        } else {
-            silent_attack_resolves(&away, &home, TeamSide::Away, &away_tactics)
-        };
-
-        match scored {
-            Some(TeamSide::Home) => {
-                home_score = home_score.saturating_add(1);
-                goal_events.push((minute, TeamSide::Home));
+    let goal_events = raw_events
+        .into_iter()
+        .filter_map(|event| {
+            if !matches!(event.event_type, EventType::Goal) {
+                return None;
             }
-            Some(TeamSide::Away) => {
-                away_score = away_score.saturating_add(1);
-                goal_events.push((minute, TeamSide::Away));
-            }
-            None => {}
-        }
-    }
 
-    (home_score.min(15), away_score.min(15), goal_events)
+            Some(SilentGoalEvent {
+                minute: event.minute,
+                team: event.team?,
+                scorer_name: event.player_name?,
+                assister_name: event.assister_name,
+            })
+        })
+        .collect();
+
+    (home_goals.min(15), away_goals.min(15), goal_events)
 }
 
 pub fn simulate_full(
@@ -201,8 +211,8 @@ pub fn simulate_full(
         minute: 1,
         home_score: 0,
         away_score: 0,
-        home_squad: home.into_iter().map(|mp| mp.player).collect(),
-        away_squad: away.into_iter().map(|mp| mp.player).collect(),
+        home_squad: home.into_iter().map(|mp| { let mut p = mp.player; p.energy = mp.energy; p }).collect(),
+        away_squad: away.into_iter().map(|mp| { let mut p = mp.player; p.energy = mp.energy; p }).collect(),
         home_lineup_zones: home_lineup_zones.cloned(),
         away_lineup_zones: away_lineup_zones.cloned(),
         is_paused: false,
@@ -273,6 +283,7 @@ fn resolve_attack(
                     state,
                     EventType::Corner,
                     None,
+                    None,
                     Some(attacking_side.clone()),
                 ));
             }
@@ -288,8 +299,8 @@ fn resolve_attack(
             
             if rng.gen::<f64>() < foul_chance {
                 // Falta cometida
-                let yellow_chance = 0.15;
-                let red_chance = 0.02;
+                let yellow_chance = 0.25;  // 25% de cartão amarelo dado que houve falta
+                let red_chance = 0.05;     // 5% de cartão vermelho dado que houve falta
                 
                 let event_type = if rng.gen::<f64>() < red_chance {
                     EventType::RedCard
@@ -309,6 +320,7 @@ fn resolve_attack(
                     state,
                     event_type,
                     Some(defender.name.clone()),
+                    None,
                     Some(foul_side),
                 ));
             }
@@ -327,22 +339,24 @@ fn resolve_attack(
     let goalkeeper_attrs = Attributes::from_player(goalkeeper);
     let shot_type = random_shot_type_with_style(&attacking_tactics.play_style);
     let shot_strength = shot_type_strength(
-        attacker_attrs.get_effective_attribute(crate::models::attributes::AttributeKind::SHT, attacker.stamina),
-        attacker_attrs.get_effective_attribute(crate::models::attributes::AttributeKind::SPD, attacker.stamina),
-        attacker_attrs.get_effective_attribute(crate::models::attributes::AttributeKind::DRB, attacker.stamina),
-        attacker_attrs.get_effective_attribute(crate::models::attributes::AttributeKind::STR, attacker.stamina),
+        attacker_attrs.get_effective_attribute_with_energy(crate::models::attributes::AttributeKind::SHT, attacker.stamina, attacker.energy),
+        attacker_attrs.get_effective_attribute_with_energy(crate::models::attributes::AttributeKind::SPD, attacker.stamina, attacker.energy),
+        attacker_attrs.get_effective_attribute_with_energy(crate::models::attributes::AttributeKind::DRB, attacker.stamina, attacker.energy),
+        attacker_attrs.get_effective_attribute_with_energy(crate::models::attributes::AttributeKind::STR, attacker.stamina, attacker.energy),
         shot_type,
     );
     let creator_bonus = apply_creator_bonus(
         shot_strength,
-        Attributes::from_player(creator).get_effective_attribute(
+        Attributes::from_player(creator).get_effective_attribute_with_energy(
             crate::models::attributes::AttributeKind::PAS,
             creator.stamina,
+            creator.energy,
         ),
     );
-    let raw_gk_def = goalkeeper_attrs.get_effective_attribute(
+    let raw_gk_def = goalkeeper_attrs.get_effective_attribute_with_energy(
         crate::models::attributes::AttributeKind::DEF,
         goalkeeper.stamina,
+        goalkeeper.energy,
     );
     let effective_gk_def = raw_gk_def * goalkeeper_penalty;
     let goal_chance = goal_probability(creator_bonus, effective_gk_def);
@@ -360,6 +374,11 @@ fn resolve_attack(
             state,
             EventType::Goal,
             Some(attacker.name.clone()),
+            if creator.id != attacker.id {
+                Some(creator.name.clone())
+            } else {
+                None
+            },
             Some(attacking_side.clone()),
         ));
     }
@@ -403,6 +422,7 @@ fn resolve_attack(
             state,
             EventType::Corner,
             None,
+            None,
             Some(attacking_side.clone()),
         ));
     }
@@ -411,75 +431,16 @@ fn resolve_attack(
         state,
         event_type,
         Some(attacker.name.clone()),
+        None,
         Some(attacking_side),
     ))
-}
-
-fn silent_attack_resolves(
-    attacking_squad: &[Player],
-    defending_squad: &[Player],
-    attacking_side: TeamSide,
-    tactics: &Tactics,
-) -> Option<TeamSide> {
-    let atk_strength = zone_strength_with_tactics(
-        attacking_squad,
-        TacticsZone::Attack,
-        &tactics.formation,
-        &tactics.play_style,
-        None,
-    );
-    let def_strength = zone_strength_with_tactics(
-        defending_squad,
-        TacticsZone::Defense,
-        &tactics.formation,
-        &tactics.play_style,
-        None,
-    );
-
-    if !zone_contest(atk_strength, def_strength) {
-        return None;
-    }
-
-    let attacker = select_attacker(attacking_squad, &tactics.play_style)?;
-    let creator = select_creator(attacking_squad, &tactics.play_style).unwrap_or(attacker);
-    let (goalkeeper, goalkeeper_penalty) = select_goalkeeper_with_penalty(defending_squad, None);
-    let goalkeeper = goalkeeper.or_else(|| defending_squad.first())?;
-
-    let attacker_attrs = Attributes::from_player(attacker);
-    let goalkeeper_attrs = Attributes::from_player(goalkeeper);
-    let shot_type = random_shot_type_with_style(&tactics.play_style);
-    let shot_strength = shot_type_strength(
-        attacker_attrs.get_effective_attribute(crate::models::attributes::AttributeKind::SHT, attacker.stamina),
-        attacker_attrs.get_effective_attribute(crate::models::attributes::AttributeKind::SPD, attacker.stamina),
-        attacker_attrs.get_effective_attribute(crate::models::attributes::AttributeKind::DRB, attacker.stamina),
-        attacker_attrs.get_effective_attribute(crate::models::attributes::AttributeKind::STR, attacker.stamina),
-        shot_type,
-    );
-    let creator_bonus = apply_creator_bonus(
-        shot_strength,
-        Attributes::from_player(creator).get_effective_attribute(
-            crate::models::attributes::AttributeKind::PAS,
-            creator.stamina,
-        ),
-    );
-    let raw_gk_def = goalkeeper_attrs.get_effective_attribute(
-        crate::models::attributes::AttributeKind::DEF,
-        goalkeeper.stamina,
-    );
-    let effective_gk_def = raw_gk_def * goalkeeper_penalty;
-    let goal_chance = goal_probability(creator_bonus, effective_gk_def);
-
-    if rand::random::<f64>() < goal_chance {
-        Some(attacking_side)
-    } else {
-        None
-    }
 }
 
 fn push_event(
     state: &mut MatchState,
     event_type: EventType,
     player_name: Option<String>,
+    assister_name: Option<String>,
     team: Option<TeamSide>,
 ) -> MatchEvent {
     let event = MatchEvent {
@@ -487,6 +448,7 @@ fn push_event(
         minute: state.minute,
         event_type,
         player_name,
+        assister_name,
         team,
     };
     state.events.push(event.clone());
@@ -586,8 +548,55 @@ fn select_attacker<'a>(players: &'a [Player], play_style: &PlayStyle) -> Option<
         attackers = players.iter().collect();
     }
 
+    if attackers.is_empty() {
+        return None;
+    }
+
+    // Sorteio ponderado para aproximar a "escalação automática":
+    // atacantes mais qualificados tendem a finalizar mais.
+    let weight_for = |p: &Player| {
+        let base = (p.shooting as f64 * 1.80)
+            + (p.dribbling as f64 * 0.75)
+            + (p.speed as f64 * 0.55)
+            + (p.overall() as f64 * 0.45);
+
+        let position_bonus = match p.position {
+            Position::ATA => 1.50,      // Atacante: forte preferência
+            Position::SA => 1.25,       // Segundo atacante: bom bônus
+            Position::PNT_E | Position::PNT_D => 0.90,  // Ponta: menos preferência que atacante
+            Position::MEI_A => 1.03,
+            Position::VOL => 0.84,
+            Position::LAT_E | Position::LAT_D => 0.80,
+            Position::ZAG => 0.70,
+            Position::GOL | Position::MEI => 0.65,
+        };
+
+        let style_bonus = match play_style {
+            PlayStyle::JogoAereo if matches!(p.position, Position::ATA | Position::ZAG) => 1.10,
+            PlayStyle::BolaDireta if matches!(p.position, Position::ATA | Position::SA) => 1.08,
+            PlayStyle::PressingAlto if matches!(p.position, Position::ATA | Position::PNT_E | Position::PNT_D) => 1.06,
+            PlayStyle::Retranca if matches!(p.position, Position::VOL) => 1.12,
+            _ => 1.0,
+        };
+
+        (base * position_bonus * style_bonus).max(1.0)
+    };
+
     let mut rng = rand::thread_rng();
-    attackers.choose(&mut rng).copied()
+    let total_weight: f64 = attackers.iter().map(|p| weight_for(p)).sum();
+    if total_weight <= f64::EPSILON {
+        return attackers.choose(&mut rng).copied();
+    }
+
+    let mut draw = rng.gen_range(0.0..total_weight);
+    for attacker in &attackers {
+        draw -= weight_for(attacker);
+        if draw <= 0.0 {
+            return Some(attacker);
+        }
+    }
+
+    attackers.last().copied()
 }
 
 fn select_creator<'a>(players: &'a [Player], play_style: &PlayStyle) -> Option<&'a Player> {
@@ -662,7 +671,7 @@ pub fn zone_strength_with_tactics(
             .map(|(player, penalty)| {
                 let attrs = Attributes::from_player(player);
                 let primary = position_primary_for_zone(tactics_zone);
-                mean_effective_attrs_zone(&attrs, &primary, player.stamina) * penalty
+                mean_effective_attrs_zone(&attrs, &primary, player.stamina, player.energy) * penalty
             })
             .sum::<f64>()
             / zone_players.len() as f64
@@ -699,10 +708,10 @@ fn position_primary_for_zone(zone: TacticsZone) -> [AttributeKind; 3] {
     }
 }
 
-fn mean_effective_attrs_zone(attrs: &Attributes, kinds: &[AttributeKind; 3], sta: u8) -> f64 {
+fn mean_effective_attrs_zone(attrs: &Attributes, kinds: &[AttributeKind; 3], sta: u8, energy: f64) -> f64 {
     kinds
         .iter()
-        .map(|kind| attrs.get_effective_attribute(kind.clone(), sta))
+        .map(|kind| attrs.get_effective_attribute_with_energy(kind.clone(), sta, energy))
         .sum::<f64>()
         / 3.0
 }
@@ -749,8 +758,11 @@ mod tests {
             defense: 75,
             stamina: 80,
             team_id: "team-1".to_string(),
-            league_id: "league-1".to_string(),
+            league_id: Some("league-1".to_string()),
             status: PlayerStatus::Titular,
+            age: None,
+            nationality: None,
+            market_value: None,
             energy: 100.0,
         }
     }

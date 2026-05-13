@@ -73,16 +73,17 @@ pub fn load_all_leagues() -> Result<HashMap<String, League>> {
 
         result.insert(
             lr.id.clone(),
-            League {
-                id: lr.id.clone(),
-                name: lr.name.clone(),
-                country: lr.country.clone(),
-                tier: lr.tier,
-                division_level: lr.division_level,
-                lower_division_id: lr.lower_division_id.clone(),
-                upper_division_id: lr.upper_division_id.clone(),
-                teams,
-            },
+                League {
+                    id: lr.id.clone(),
+                    name: lr.name.clone(),
+                    country: lr.country.clone(),
+                    confederation: lr.confederation.clone(),
+                    tier: lr.tier,
+                    division_level: lr.division_level,
+                    lower_division_id: lr.lower_division_id.clone(),
+                    upper_division_id: lr.upper_division_id.clone(),
+                    teams,
+                },
         );
     }
 
@@ -171,7 +172,11 @@ fn asset_path(relative: &str) -> String {
     // mas no data_loader (chamado de commands) usamos std::env::current_dir
     // como fallback simples para desenvolvimento.
     let base = std::env::current_dir().unwrap_or_default();
-    base.join(relative).to_string_lossy().into_owned()
+    let full_path = base.join(relative);
+    if !full_path.exists() {
+        eprintln!("⚠️ Aviso: Caminho não encontrado: {:?}", full_path);
+    }
+    full_path.to_string_lossy().into_owned()
 }
 
 // ── testes ──────────────────────────────────────────────────────────────────

@@ -8,6 +8,7 @@ pub struct League {
     pub id: String,
     pub name: String,
     pub country: String,
+    pub confederation: String,
     #[serde(default = "default_league_tier")]
     pub tier: u8,
     #[serde(default = "default_division_level")]
@@ -39,6 +40,7 @@ pub struct LeagueRecord {
     pub id: String,
     pub name: String,
     pub country: String,
+    pub confederation: String,
     #[serde(default = "default_league_tier")]
     pub tier: u8,
     #[serde(default = "default_division_level")]

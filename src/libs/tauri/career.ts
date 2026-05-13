@@ -20,6 +20,7 @@ export interface SquadPlayer {
   energy?: number
   age?: number
   nationality?: string
+  marketValue?: number
 }
 
 export interface TeamDetail {
@@ -40,6 +41,7 @@ export interface LeagueOption {
   id: string
   name: string
   country: string
+  confederation: string
   teams: TeamOption[]
 }
 
@@ -74,6 +76,13 @@ export interface BackgroundLeagueSnapshot {
   leaderPoints: number
 }
 
+export interface GoalScorerTallyEntry {
+  playerId?: string
+  playerName: string
+  teamName: string
+  goals: number
+}
+
 export interface CareerSnapshot {
   leagueId: string
   playerTeamId: string
@@ -90,6 +99,7 @@ export interface CareerSnapshot {
   nextMatchDate: string
   table: TableEntry[]
   nextRoundFixtures: Fixture[]
+  currentLeagueTopScorers: GoalScorerTallyEntry[]
   backgroundLeagues: BackgroundLeagueSnapshot[]
 }
 
@@ -172,10 +182,12 @@ interface RawLeague {
   name?: string
   teams?: RawTeam[]
   country?: string
+  confederation?: string
   Id?: string
   Name?: string
   Teams?: RawTeam[]
   Country?: string
+  Confederation?: string
 }
 
 interface RawSquadPlayer {
@@ -191,6 +203,8 @@ interface RawSquadPlayer {
   status?: string
   age?: number
   nationality?: string
+  marketValue?: number
+  market_value?: number
   Id?: string
   Name?: string
   Position?: string
@@ -203,6 +217,8 @@ interface RawSquadPlayer {
   Status?: string
   Age?: number
   Nationality?: string
+  MarketValue?: number
+  Market_Value?: number
 }
 
 interface RawTeamDetail extends RawTeam {
@@ -229,6 +245,7 @@ const normalizeLeague = (raw: RawLeague): LeagueOption | null => {
   const id = raw.id ?? raw.Id
   const name = raw.name ?? raw.Name
   const country = raw.country ?? raw.Country ?? ''
+  const confederation = raw.confederation ?? raw.Confederation ?? ''
   const teamsRaw = raw.teams ?? raw.Teams ?? []
 
   if (!id || !name) return null
@@ -237,6 +254,7 @@ const normalizeLeague = (raw: RawLeague): LeagueOption | null => {
     id,
     name,
     country,
+    confederation,
     teams: teamsRaw.map(normalizeTeam).filter((team): team is TeamOption => team !== null),
   }
 }
@@ -254,6 +272,7 @@ const normalizeSquadPlayer = (raw: RawSquadPlayer): SquadPlayer | null => {
   const status = raw.status ?? raw.Status
   const age = raw.age ?? raw.Age
   const nationality = raw.nationality ?? raw.Nationality
+  const marketValue = raw.marketValue ?? raw.market_value ?? raw.MarketValue ?? raw.Market_Value
 
   if (
     !id ||
@@ -282,6 +301,7 @@ const normalizeSquadPlayer = (raw: RawSquadPlayer): SquadPlayer | null => {
     status,
     age,
     nationality,
+    marketValue,
   }
 }
 
@@ -371,6 +391,13 @@ export const getLineup = async () =>
 export const getPlayerEnergies = async () =>
   invoke<Record<string, number>>('get_player_energies')
 
+export const getPlayerTeamSquad = async () => {
+  const raw = await invoke<RawSquadPlayer[]>('get_player_team_squad')
+  return raw
+    .map(normalizeSquadPlayer)
+    .filter((player): player is SquadPlayer => player !== null)
+}
+
 // ===== CALENDAR DATA =====
 
 export interface CalendarMatch {
@@ -417,3 +444,168 @@ export const listCoachJobOffers = async () =>
 
 export const acceptCoachJobOffer = async (newTeamId: string) =>
   invoke<CareerSnapshot>('accept_coach_job_offer', { newTeamId })
+
+// ===== PLAYER TRANSFER MARKET =====
+
+export interface TransferMarketPlayer {
+  playerId: string
+  playerName: string
+  position: string
+  overall: number
+  speed: number
+  shooting: number
+  passing: number
+  dribbling: number
+  defense: number
+  stamina: number
+  age?: number
+  nationality?: string
+  marketValue: number
+  teamId: string
+  teamName: string
+  leagueId: string
+  leagueName: string
+  country: string
+  attemptsUsed: number
+  isBlocked: boolean
+}
+
+export interface TransferMarketQuery {
+  page?: number
+  pageSize?: number
+  country?: string
+  leagueId?: string
+  teamId?: string
+  name?: string
+  position?: string
+  ovrMin?: number
+  ovrMax?: number
+  ageMin?: number
+  ageMax?: number
+  valueMin?: number
+  valueMax?: number
+  speedMin?: number
+  speedMax?: number
+  shootingMin?: number
+  shootingMax?: number
+  passingMin?: number
+  passingMax?: number
+  dribblingMin?: number
+  dribblingMax?: number
+  defenseMin?: number
+  defenseMax?: number
+  staminaMin?: number
+  staminaMax?: number
+}
+
+export interface TransferMarketPage {
+  items: TransferMarketPlayer[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+}
+
+export interface TransferMarketLeagueOption {
+  leagueId: string
+  leagueName: string
+  country: string
+}
+
+export interface TransferMarketTeamOption {
+  teamId: string
+  teamName: string
+  leagueId: string
+}
+
+export interface TransferMarketCatalog {
+  countries: string[]
+  leagues: TransferMarketLeagueOption[]
+  teams: TransferMarketTeamOption[]
+}
+
+export type TransferOfferResultKind =
+  | 'accepted'
+  | 'refused'
+  | 'blocked'
+  | 'insufficient_budget'
+
+export interface TransferOfferResult {
+  result: TransferOfferResultKind
+  attemptsUsed: number
+}
+
+export interface AiPlayerOffer {
+  playerId: string
+  playerName: string
+  playerOverall?: number
+  playerMarketValue?: number
+  offeringTeamId: string
+  offeringTeamName: string
+  offerValue: number
+}
+
+export interface AiMarketActivity {
+  leagueId: string
+  sellerTeamName: string
+  buyerTeamName: string
+  playerName: string
+  offerValue: number
+}
+
+export interface SeasonLeagueChampion {
+  leagueId: string
+  leagueName: string
+  championTeamId: string
+  championTeamName: string
+  points: number
+}
+
+export interface SeasonTopScorer {
+  leagueId: string
+  leagueName: string
+  playerId?: string
+  playerName: string
+  teamName: string
+  goals: number
+}
+
+export interface SeasonWorldTransfer {
+  leagueId: string
+  leagueName: string
+  sellerTeamName: string
+  buyerTeamName: string
+  playerName: string
+  offerValue: number
+  transferType: string
+}
+
+export interface CareerSeasonSummary {
+  season: number
+  leagueChampions: SeasonLeagueChampion[]
+  topScorers: SeasonTopScorer[]
+  worldTransfers: SeasonWorldTransfer[]
+}
+
+export const listTransferMarket = async (query?: TransferMarketQuery) =>
+  invoke<TransferMarketPage>('list_transfer_market', { query })
+
+export const listTransferMarketCatalog = async () =>
+  invoke<TransferMarketCatalog>('list_transfer_market_catalog')
+
+export const submitTransferOffer = async (playerId: string, offerValue: number) =>
+  invoke<TransferOfferResult>('submit_transfer_offer', { playerId, offerValue })
+
+export const listAiPlayerTransferOffers = async () =>
+  invoke<AiPlayerOffer[]>('list_ai_player_transfer_offers')
+
+export const respondAiPlayerTransferOffer = async (playerId: string, accept: boolean) =>
+  invoke<CareerSnapshot>('respond_ai_player_transfer_offer', { playerId, accept })
+
+export const listAiMarketRoundActivity = async () =>
+  invoke<AiMarketActivity[]>('list_ai_market_round_activity')
+
+export const listCareerSeasonStatistics = async () =>
+  invoke<CareerSeasonSummary[]>('list_career_season_statistics')
